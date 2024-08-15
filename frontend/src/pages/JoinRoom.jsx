@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import socket from "../utils/socket.js";
 import { toast } from "react-toastify";
 import { useCookie } from "../hooks/useCookie.js";
@@ -8,7 +8,11 @@ import { useNavigate } from "react-router-dom";
 const JoinRoom = () => {
   const { getItem, setItem } = useCookie();
   const navigate = useNavigate();
+  // const LoggedInUser = getItem("user");
   const [userAndRoom, setUserAndRoom] = useState({ username: "", room: "" });
+
+  // useEffect(() => {}, [LoggedInUser, navigate, setItem]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUserAndRoom((prev) => ({ ...prev, [name]: value }));

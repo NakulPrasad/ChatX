@@ -4,13 +4,24 @@ import { toast } from "react-toastify";
 import img from "../assets/user.jpg";
 import { useCookie } from "../hooks/useCookie.js";
 import Message from "../components/Message.jsx";
+// import { useNavigate } from "react-router-dom";
 const Chat = () => {
-  const { getItem } = useCookie();
   const [messages, setMessages] = useState([]);
+  const { getItem, setItem } = useCookie();
+  const [msgToSend, setMsgToSend] = useState("");
   const LoggedInUser = getItem("user");
-  console.log(LoggedInUser);
+  // console.log(LoggedInUser);
 
   useEffect(() => {
+    if (LoggedInUser) {
+      socket.timeout(1000).emit("join_room", LoggedInUser, (err, res) => {
+        if (res.success) {
+          // console.log(res.user);
+          setItem("user", res.user);
+        }
+      });
+    }
+
     socket.on("join_room_greet", (data) => {
       toast.info(data.message);
     });
@@ -22,6 +33,7 @@ const Chat = () => {
         ...prevMessages,
         { sender_name, content, room, created_time },
       ]);
+      // console.log(messages);
     });
 
     return () => {
@@ -30,18 +42,27 @@ const Chat = () => {
     };
   }, []);
 
-  let msgToSend = "";
   const handleChange = (e) => {
-    msgToSend = e.target.value;
+    setMsgToSend(e.target.value);
+  };
+
+  const msgBodyToSend = {
+    sender_name: LoggedInUser?.username,
+    room: LoggedInUser?.room,
+    created_time: Date.now(),
+    content: msgToSend,
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    socket.emit("send_message", {
-      sender_name: LoggedInUser?.username,
-      room: LoggedInUser?.room,
-      created_time: Date.now(),
-      content: msgToSend,
+    socket.timeout(1000).emit("send_message", msgBodyToSend, (err, res) => {
+      if (err) {
+        socket.emit("send_message", msgBodyToSend);
+      } else if (res.success) {
+        setMessages((prevMessages) => [...prevMessages, msgBodyToSend]);
+        toast.success("msg send success");
+        // console.log(msgBodyToSend.content);
+      }
     });
   };
   return (
@@ -83,7 +104,7 @@ const Chat = () => {
           </p>{" "}
           <p className="flex-1">Room : {LoggedInUser?.room | ""}</p>
         </div>
-        <div className="col-span-4 col-start-2 flex">
+        <form onSubmit={handleSubmit} className="col-span-4 col-start-2 flex">
           <input
             type="text"
             title="chatInput"
@@ -92,10 +113,10 @@ const Chat = () => {
             onChange={handleChange}
             className="border-2 bg-slate-200 px-2 py-1 w-full border-secondary rounded-full focus:ring-secondaryHover"
           />
-          <button type="submit" onClick={handleSubmit}>
+          <button type="submit">
             <img src={img} alt="sendButton" className="w-8 mx-1 rounded-full" />
           </button>
-        </div>
+        </form>
       </div>
     </section>
   );
