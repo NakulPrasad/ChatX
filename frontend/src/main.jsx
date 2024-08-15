@@ -12,6 +12,7 @@ import ErrorPage from "./pages/Error.jsx";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
 import { useCookie } from "./hooks/useCookie.js";
+import { UserProvider } from "./context/UserContext.jsx";
 
 const PrivateRoute = ({ children, redirectTo }) => {
   const { getItem } = useCookie();
@@ -36,6 +37,8 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ToastContainer />
-    <RouterProvider router={router}></RouterProvider>
+    <UserProvider>
+      <RouterProvider router={router}></RouterProvider>
+    </UserProvider>
   </StrictMode>
 );

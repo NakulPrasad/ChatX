@@ -1,17 +1,13 @@
-import { useEffect, useState } from "react";
 import socket from "../utils/socket.js";
 import { toast } from "react-toastify";
 import { useCookie } from "../hooks/useCookie.js";
-
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const JoinRoom = () => {
-  const { getItem, setItem } = useCookie();
+  const { setItem } = useCookie();
   const navigate = useNavigate();
-  // const LoggedInUser = getItem("user");
   const [userAndRoom, setUserAndRoom] = useState({ username: "", room: "" });
-
-  // useEffect(() => {}, [LoggedInUser, navigate, setItem]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,12 +16,13 @@ const JoinRoom = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      socket.timeout(5000).emit("join_room", userAndRoom, (err, res) => {
-        if (res.success) {
+      socket.timeout(1000).emit("join_room", userAndRoom, (err, res) => {
+        if (!res.success) {
+          toast.error(res.message);
+        } else if (res.success) {
           toast.success(res.message);
           // console.log(res.user);
           setItem("user", res.user);
-
           navigate("/");
         }
       });

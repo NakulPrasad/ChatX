@@ -1,39 +1,44 @@
-import React, { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import socket from "../utils/socket.js";
 import { toast } from "react-toastify";
-import img from "../assets/user.jpg";
-import { useCookie } from "../hooks/useCookie.js";
 import Message from "../components/Message.jsx";
-// import { useNavigate } from "react-router-dom";
+import { useSocket } from "../hooks/useSocket.js";
+import { UserContext } from "../context/UserContext.jsx";
+import { useCookie } from "../hooks/useCookie.js";
+
 const Chat = () => {
   const [messages, setMessages] = useState([]);
-  const { getItem, setItem } = useCookie();
   const [msgToSend, setMsgToSend] = useState("");
-  const LoggedInUser = getItem("user");
-  // console.log(LoggedInUser);
+  // const { user } = useContext(UserContext);
+  const { getItem } = useCookie();
+  const user = getItem("user");
+  const { fetchUsers } = useSocket();
 
   useEffect(() => {
-    if (LoggedInUser) {
-      socket.timeout(1000).emit("join_room", LoggedInUser, (err, res) => {
+    if (user) {
+      socket.timeout(1000).emit("join_room", user, (err, res) => {
         if (res.success) {
-          // console.log(res.user);
-          setItem("user", res.user);
+          toast.success(`Joined Room ${user.room}`);
+          fetchUsers();
         }
       });
     }
 
     socket.on("join_room_greet", (data) => {
+      fetchUsers();
       toast.info(data.message);
+    });
+    socket.on("user_disconnect", (data) => {
+      toast.error(data.message);
+      fetchUsers();
     });
 
     socket.on("receive_message", (data) => {
       const { sender_name, content, room, created_time } = data;
-      console.log(data);
       setMessages((prevMessages) => [
         ...prevMessages,
         { sender_name, content, room, created_time },
       ]);
-      // console.log(messages);
     });
 
     return () => {
@@ -47,8 +52,8 @@ const Chat = () => {
   };
 
   const msgBodyToSend = {
-    sender_name: LoggedInUser?.username,
-    room: LoggedInUser?.room,
+    sender_name: user?.username,
+    room: user?.room,
     created_time: Date.now(),
     content: msgToSend,
   };
@@ -61,28 +66,13 @@ const Chat = () => {
       } else if (res.success) {
         setMessages((prevMessages) => [...prevMessages, msgBodyToSend]);
         toast.success("msg send success");
-        // console.log(msgBodyToSend.content);
+        setMsgToSend("");
       }
     });
   };
   return (
     <section id="chatscreen" className="h-screen col-span-4 p-2 overflow-auto">
       <ul className=" pb-6">
-        {/* {Object.entries(messages).map(([date, messagesForDate]) => (
-              <React.Fragment key={date}>
-                <li>
-                  <p className="text-center text-textSecondary text-sm">{date}</p>
-                </li>
-                {messagesForDate.map((message) => (
-                  <Message
-                    key={message.id}
-                    content={message.content}
-                    timestamp={message.timestamp}
-                    sender={message.sender}
-                  />
-                ))}
-              </React.Fragment>
-            ))} */}
         {messages.map((message, index) => (
           <Message
             key={index}
@@ -97,24 +87,25 @@ const Chat = () => {
         id="chatInputField"
         className="absolute bottom-2 grid grid-cols-5 right-2 left-2 "
       >
-        <div className="flex items-center">
-          <p className="flex-1">Id : {LoggedInUser?.id | ""}</p>
-          <p className="flex-1">
-            Username : {LoggedInUser?.username | ""}
-          </p>{" "}
-          <p className="flex-1">Room : {LoggedInUser?.room | ""}</p>
-        </div>
         <form onSubmit={handleSubmit} className="col-span-4 col-start-2 flex">
           <input
             type="text"
             title="chatInput"
+            value={msgToSend}
             name="chatInput"
             placeholder="Message ..."
             onChange={handleChange}
             className="border-2 bg-slate-200 px-2 py-1 w-full border-secondary rounded-full focus:ring-secondaryHover"
           />
           <button type="submit">
-            <img src={img} alt="sendButton" className="w-8 mx-1 rounded-full" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="w-8 mx-1 rounded-full"
+            >
+              <title>arrow-right-thin-circle-outline</title>
+              <path d="M20.03 12C20.03 7.59 16.41 3.97 12 3.97C7.59 3.97 3.97 7.59 3.97 12C3.97 16.41 7.59 20.03 12 20.03C16.41 20.03 20.03 16.41 20.03 12M22 12C22 17.54 17.54 22 12 22C6.46 22 2 17.54 2 12C2 6.46 6.46 2 12 2C17.54 2 22 6.46 22 12M13.54 13V16L17.5 12L13.54 8V11H6.5V13" />
+            </svg>
           </button>
         </form>
       </div>
