@@ -3,7 +3,6 @@ import { useCookie } from "../hooks/useCookie";
 
 const Message = ({ content, timestamp, sender }) => {
   const { getItem } = useCookie();
-  debugger;
   const currentUser = getItem("user");
   const styleParent = `flex  items-center flex-cols my-4 ${
     currentUser.username === sender && "flex-row-reverse"

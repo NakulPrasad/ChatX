@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import socket from "./utils/Socket.js";
+import socket from "./utils/socket.js";
 import Chat from "./pages/Chat.jsx";
+import SideBar from "./components/SideBar.jsx";
 
 const App = () => {
   const [currentUsers, setCurrentUsers] = useState([]);
@@ -14,7 +15,8 @@ const App = () => {
     };
   }, [currentUsers]);
   return (
-    <div>
+    <div className="grid grid-cols-5 min-h-screen">
+      <SideBar currentUsers={currentUsers} />
       <Chat currentUsers={currentUsers} />
     </div>
   );
