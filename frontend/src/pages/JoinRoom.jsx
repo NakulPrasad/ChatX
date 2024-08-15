@@ -1,12 +1,13 @@
-import socket from "../utils/socket.js";
 import { toast } from "react-toastify";
 import { useCookie } from "../hooks/useCookie.js";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useSocket } from "../hooks/useSocket.js";
 
 const JoinRoom = () => {
-  const { setItem } = useCookie();
   const navigate = useNavigate();
+  const { setItem } = useCookie();
+  const { socket } = useSocket();
   const [userAndRoom, setUserAndRoom] = useState({ username: "", room: "" });
 
   const handleChange = (e) => {
@@ -21,13 +22,12 @@ const JoinRoom = () => {
           toast.error(res.message);
         } else if (res.success) {
           toast.success(res.message);
-          // console.log(res.user);
           setItem("user", res.user);
           navigate("/");
         }
       });
     } catch (e) {
-      toast.error(e);
+      console.error(e);
     }
   };
   return (

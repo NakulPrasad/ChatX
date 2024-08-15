@@ -1,36 +1,33 @@
-import { useContext, useEffect, useState } from "react";
-import socket from "../utils/socket.js";
+import { useContext, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Message from "../components/Message.jsx";
 import { useSocket } from "../hooks/useSocket.js";
 import { UserContext } from "../context/UserContext.jsx";
-import { useCookie } from "../hooks/useCookie.js";
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [msgToSend, setMsgToSend] = useState("");
-  // const { user } = useContext(UserContext);
-  const { getItem } = useCookie();
-  const user = getItem("user");
-  const { fetchUsers } = useSocket();
+  const { user } = useContext(UserContext);
+  const { fetchUsers, socket } = useSocket();
+  const fetchUsersRef = useRef(fetchUsers);
 
   useEffect(() => {
     if (user) {
       socket.timeout(1000).emit("join_room", user, (err, res) => {
         if (res.success) {
           toast.success(`Joined Room ${user.room}`);
-          fetchUsers();
+          fetchUsersRef.current();
         }
       });
     }
 
     socket.on("join_room_greet", (data) => {
-      fetchUsers();
+      fetchUsersRef.current();
       toast.info(data.message);
     });
     socket.on("user_disconnect", (data) => {
       toast.error(data.message);
-      fetchUsers();
+      fetchUsersRef.current();
     });
 
     socket.on("receive_message", (data) => {
@@ -45,7 +42,7 @@ const Chat = () => {
       socket.off("join_room_greet");
       socket.off("receive_message");
     };
-  }, []);
+  }, [socket, user]);
 
   const handleChange = (e) => {
     setMsgToSend(e.target.value);

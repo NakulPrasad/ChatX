@@ -1,26 +1,19 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import App from "./App.jsx";
 import JoinRoom from "./pages/JoinRoom.jsx";
 import ErrorPage from "./pages/Error.jsx";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
-import { useCookie } from "./hooks/useCookie.js";
 import { UserProvider } from "./context/UserContext.jsx";
-
-const PrivateRoute = ({ children, redirectTo }) => {
-  const { getItem } = useCookie();
-  return getItem("user") ? children : <Navigate to={redirectTo} />;
-};
+import PropTypes from "prop-types";
+import PrivateRoute from "./components/PrivateRoute.jsx";
+import { ROUTES } from "./utils/routes.js";
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: ROUTES.HOME,
     element: (
       <PrivateRoute redirectTo={"/join"}>
         <App />
@@ -29,7 +22,7 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: "/join",
+    path: ROUTES.JOIN,
     element: <JoinRoom />,
   },
 ]);
@@ -42,3 +35,8 @@ createRoot(document.getElementById("root")).render(
     </UserProvider>
   </StrictMode>
 );
+
+PrivateRoute.propTypes = {
+  children: PropTypes.element.isRequired,
+  redirectTo: PropTypes.string.isRequired,
+};

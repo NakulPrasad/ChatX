@@ -25,8 +25,7 @@ const App = () => {
     setCurrentUsers,
     setUser,
   };
-
-  // console.log(currentUsers);
+  // console.log(user);
   return (
     <div className="grid grid-cols-5 h-screen">
       <UserContext.Provider value={values}>

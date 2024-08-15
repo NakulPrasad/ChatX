@@ -33,10 +33,11 @@ export const useSocket = () => {
 
     const fetchUsers = () => {
         socket.timeout(1000).emit("request_chatroom_users", LoggedInUser, (err, res) => {
+            if (!res.success) toast.error(res.message | 'Error while fetching chatroom users')
             setCurrentUsers(res.users)
         });
     }
 
 
-    return { currentUsers, fetchUsers };
+    return { socket, currentUsers, fetchUsers };
 };

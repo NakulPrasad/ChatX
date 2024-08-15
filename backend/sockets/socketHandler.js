@@ -53,8 +53,6 @@ const handleSocketIO = (httpServer) => {
                 cb({ success: false, message: "Room Invalid" })
                 return
             }
-            console.log(allUsers);
-            console.log(allUsers[0]);
             let chatRoomUsers = allUsers.filter(user => {
                 return user.room === room
             })

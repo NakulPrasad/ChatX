@@ -1,14 +1,15 @@
+import { useContext } from "react";
 import img from "../assets/user.jpg";
-import { useCookie } from "../hooks/useCookie";
+import PropTypes from "prop-types";
+import { UserContext } from "../context/UserContext";
 
 const Message = ({ content, timestamp, sender }) => {
-  const { getItem } = useCookie();
-  const currentUser = getItem("user");
+  const { user } = useContext(UserContext);
   const styleParent = `flex  items-center flex-cols my-4 ${
-    currentUser.username === sender && "flex-row-reverse"
+    user.username === sender && "flex-row-reverse"
   }`;
   const styleMsg = `mx-2  rounded p-2 ${
-    currentUser.username === sender
+    user.username === sender
       ? "bg-blue-400 hover:bg-blue-500"
       : "bg-blue-300 hover:bg-blue-400"
   }`;
@@ -31,3 +32,9 @@ const Message = ({ content, timestamp, sender }) => {
 };
 
 export default Message;
+
+Message.propTypes = {
+  content: PropTypes.string.isRequired,
+  timestamp: PropTypes.number.isRequired,
+  sender: PropTypes.string.isRequired,
+};
