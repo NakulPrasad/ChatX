@@ -5,10 +5,10 @@ import useChatRoomManger from "../hooks/useChatRoomManager.js";
 import { UserContext } from "../context/UserContext.jsx";
 
 const Chat = () => {
+  const { socket, sendMessage, previousMessages } = useChatRoomManger();
   const [messages, setMessages] = useState([]);
   const [msgToSend, setMsgToSend] = useState("");
   const { user } = useContext(UserContext);
-  const { socket, sendMessage } = useChatRoomManger();
 
   useEffect(() => {
     socket.on("join_room_greet", (data) => {
@@ -28,6 +28,10 @@ const Chat = () => {
       socket.off("receive_message");
     };
   }, [socket, user]);
+
+  useEffect(() => {
+    setMessages(previousMessages);
+  }, [previousMessages]);
 
   const handleChange = (e) => {
     setMsgToSend(e.target.value);

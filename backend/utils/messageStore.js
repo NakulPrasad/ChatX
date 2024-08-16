@@ -1,4 +1,4 @@
-const messageStore = {}
+let messageStore = {}
 
 const saveMessage = (roomId, message) => {
     if (!messageStore[roomId]) {

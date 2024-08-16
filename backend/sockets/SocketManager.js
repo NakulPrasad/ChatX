@@ -1,5 +1,7 @@
 const { Server } = require('socket.io')
 const { getMessages, saveMessage } = require('../utils/messageStore.js')
+const ChatServer = require('../observers/ChatServer.js')
+const Client = require('../observers/Client.js')
 
 const getSocketIo = (httpServer) => {
     const io = new Server(httpServer, {
@@ -12,29 +14,33 @@ const getSocketIo = (httpServer) => {
 
     let allUsers = []
     const chatBotName = 'ChatBot'
-    const generateChatBotMessage = (username) => { `${username} joined` }
+    const generateChatBotMessage = (username) => { return `${username} joined` }
 
     io.on('connection', (socket) => {
         socket.on('join_room', (data, cb) => {
-            const { username, room } = data
-            if (allUsers.find(user => user.username === username && user.room === room)) {
-                cb({ sucess: false, message: 'Username already taken' })
-                return
+            const username = data?.username
+            const room = data?.room
+            if (!username || !room) {
+                if (allUsers.find(user => user.username === username && user.room === room)) {
+                    cb({ success: false, message: 'Username already taken' })
+                    return
+                }
             }
             socket.join(room)
 
             const createdAt = Date.now();
             const chatBotMessage = generateChatBotMessage(username)
-            socket.to(room).emit('receive_message', { chatBotName, chatBotMessage, room, createdAt })
+            const messageToSend = { sender_name: chatBotName, content: chatBotMessage, room, createdAt }
+            socket.to(room).emit('receive_message', messageToSend)
+            saveMessage(room, messageToSend)
 
-            socket.to(room).emit('join_room_greet', {
+            io.to(room).emit('join_room_greet', {
                 message: `${username} joined`,
                 username: username,
             })
 
             const previousMessages = getMessages(room)
-            socket.to(room).emit('previousMessages', previousMessages)
-
+            socket.emit('previousMessages', previousMessages)
 
 
             if (!allUsers.find(user => user.username === username && user.room === room))
@@ -51,8 +57,6 @@ const getSocketIo = (httpServer) => {
                 socket.to(disconnected_user.room).emit('user_disconnect', {
                     message: "User Disconnected"
                 });
-            } else {
-                console.log("No user found with the given socket id.");
             }
         });
 
@@ -68,12 +72,18 @@ const getSocketIo = (httpServer) => {
             cb({ success: true, users: chatRoomUsers })
 
         })
+
         socket.on('send_message', (data, cb) => {
             const { sender_name, content, room, createdAt } = data
+            if (!sender_name || !content || !room || !createdAt) {
+                cb({ success: false, message: "Missing data fields" })
+                return
+            }
             socket.to(room).emit('receive_message', { sender_name, content, room, createdAt })
             saveMessage(room, { sender_name, content, room, createdAt })
-            cb({ success: true, message: "Message sent sucessfully!" })
+            cb({ success: true, message: "Message sent successfully!" })
         })
+
     })
     return io
 }

@@ -1,5 +1,3 @@
-import { toast } from "react-toastify";
-import { useCookie } from "../hooks/useCookie.js";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import useChatRoomManager from "../hooks/useChatRoomManager.js";
@@ -7,7 +5,6 @@ import sideImage from "/join.gif";
 
 const JoinRoom = () => {
   const navigate = useNavigate();
-  const { setItem } = useCookie();
   const { joinRoom } = useChatRoomManager();
   const [userAndRoom, setUserAndRoom] = useState({ username: "", room: "" });
 
@@ -18,10 +15,8 @@ const JoinRoom = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const joined = joinRoom(userAndRoom);
-      if (joined) {
-        navigate("/");
-      }
+      joinRoom(userAndRoom);
+      navigate("/");
     } catch (e) {
       console.error(e);
     }

@@ -12,6 +12,7 @@ const useChatRoomManager = () => {
     const setCurrentUsersRef = useRef(setCurrentUsers)
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [userJoinOrLeave, setUserJoinOrLeave] = useState(false)
+    const [previousMessages, setPreviousMessages] = useState([])
     useEffect(() => {
         socket.on("connect", () => {
             toast.success("Server Connected");
@@ -24,10 +25,6 @@ const useChatRoomManager = () => {
         });
 
         socket.on("user_disconnect", () => {
-            setUserJoinOrLeave(prev => !prev)
-        });
-
-        socket.on("join_room_greet", () => {
             setUserJoinOrLeave(prev => !prev)
         });
 
@@ -45,6 +42,12 @@ const useChatRoomManager = () => {
                 toast.success(`Joined Room ${LoggedInUserRef.current.room}`);
             }
         });
+        socket.on("previousMessages", (data) => {
+            setPreviousMessages(data)
+        });
+        return () => {
+            socket.off('previousMessages')
+        }
     }, [isLoggedIn])
 
     useEffect(() => {
@@ -74,7 +77,7 @@ const useChatRoomManager = () => {
             createdAt: Date.now(),
             content: message,
         };
-        socket.timeout(1000).emit("send_message", msgBodyToSend, (err, res) => {
+        socket.timeout(1000).emit("send_message", msgBodyToSend, (err) => {
             if (err) {
                 socket.emit("send_message", msgBodyToSend);
             }
@@ -83,7 +86,7 @@ const useChatRoomManager = () => {
 
 
 
-    return { socket, currentUsers, sendMessage, joinRoom };
+    return { socket, currentUsers, previousMessages, sendMessage, joinRoom };
 };
 
 export default useChatRoomManager
