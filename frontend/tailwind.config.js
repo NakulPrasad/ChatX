@@ -23,6 +23,7 @@ export default {
         linkHover: '#004085', // Even Darker Blue (Link hover)
         buttonPrimary: '#0056b3', // Darker Blue (Primary buttons)
         buttonPrimaryHover: '#004085', // Even Darker Blue (Primary button hover)
+        buttonPrimaryHover2: '#003366', // Even Darker Blue (Primary button hover)
         buttonSecondary: '#6c757d', // Gray (Secondary buttons)
         buttonSecondaryHover: '#5a6268', // Darker Gray (Secondary button hover)
         borderHover: '#ced4da', // Slightly darker gray for borders on hover

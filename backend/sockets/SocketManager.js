@@ -1,5 +1,7 @@
 const { Server } = require('socket.io')
-const handleSocketIO = (httpServer) => {
+const { getMessages, saveMessage } = require('../utils/messageStore.js')
+
+const getSocketIo = (httpServer) => {
     const io = new Server(httpServer, {
         cors: {
             origin: "http://localhost:5173",
@@ -9,6 +11,8 @@ const handleSocketIO = (httpServer) => {
     })
 
     let allUsers = []
+    const chatBotName = 'ChatBot'
+    const generateChatBotMessage = (username) => { `${username} joined` }
 
     io.on('connection', (socket) => {
         socket.on('join_room', (data, cb) => {
@@ -19,11 +23,19 @@ const handleSocketIO = (httpServer) => {
             }
             socket.join(room)
 
+            const createdAt = Date.now();
+            const chatBotMessage = generateChatBotMessage(username)
+            socket.to(room).emit('receive_message', { chatBotName, chatBotMessage, room, createdAt })
 
             socket.to(room).emit('join_room_greet', {
                 message: `${username} joined`,
                 username: username,
             })
+
+            const previousMessages = getMessages(room)
+            socket.to(room).emit('previousMessages', previousMessages)
+
+
 
             if (!allUsers.find(user => user.username === username && user.room === room))
                 allUsers.push({ username, room, id: socket.id })
@@ -31,8 +43,6 @@ const handleSocketIO = (httpServer) => {
             cb({ success: true, message: 'Joined room successfully!', user: { id: socket.id, username, room } });
         })
         socket.on('disconnect', () => {
-            console.log("disconnect", socket.id);
-
             const disconnected_user = allUsers.find(user => user.id === socket.id);
 
             allUsers = allUsers.filter(user => user.id !== socket.id);
@@ -48,7 +58,6 @@ const handleSocketIO = (httpServer) => {
 
         socket.on('request_chatroom_users', (data, cb) => {
             const room = data?.room
-            console.log(room);
             if (!room) {
                 cb({ success: false, message: "Room Invalid" })
                 return
@@ -56,17 +65,16 @@ const handleSocketIO = (httpServer) => {
             let chatRoomUsers = allUsers.filter(user => {
                 return user.room === room
             })
-            console.log(chatRoomUsers)
             cb({ success: true, users: chatRoomUsers })
 
         })
         socket.on('send_message', (data, cb) => {
-            // console.log(data);
-            const { sender_name, content, room, created_time } = data
-            // console.log(sender_name);
-            socket.to(room).emit('receive_message', data)
+            const { sender_name, content, room, createdAt } = data
+            socket.to(room).emit('receive_message', { sender_name, content, room, createdAt })
+            saveMessage(room, { sender_name, content, room, createdAt })
             cb({ success: true, message: "Message sent sucessfully!" })
         })
     })
+    return io
 }
-module.exports = handleSocketIO
+module.exports = getSocketIo

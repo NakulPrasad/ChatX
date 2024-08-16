@@ -27,7 +27,7 @@ const App = () => {
   };
   // console.log(user);
   return (
-    <div className="grid grid-cols-5 h-screen">
+    <div className="grid grid-cols-5 h-screen overflow-auto">
       <UserContext.Provider value={values}>
         <SideBar />
         <Chat />

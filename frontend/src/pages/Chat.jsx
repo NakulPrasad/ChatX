@@ -1,40 +1,25 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Message from "../components/Message.jsx";
-import { useSocket } from "../hooks/useSocket.js";
+import useChatRoomManger from "../hooks/useChatRoomManager.js";
 import { UserContext } from "../context/UserContext.jsx";
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [msgToSend, setMsgToSend] = useState("");
   const { user } = useContext(UserContext);
-  const { fetchUsers, socket } = useSocket();
-  const fetchUsersRef = useRef(fetchUsers);
+  const { socket, sendMessage } = useChatRoomManger();
 
   useEffect(() => {
-    if (user) {
-      socket.timeout(1000).emit("join_room", user, (err, res) => {
-        if (res.success) {
-          toast.success(`Joined Room ${user.room}`);
-          fetchUsersRef.current();
-        }
-      });
-    }
-
     socket.on("join_room_greet", (data) => {
-      fetchUsersRef.current();
       toast.info(data.message);
-    });
-    socket.on("user_disconnect", (data) => {
-      toast.error(data.message);
-      fetchUsersRef.current();
     });
 
     socket.on("receive_message", (data) => {
-      const { sender_name, content, room, created_time } = data;
+      const { sender_name, content, room, createdAt } = data;
       setMessages((prevMessages) => [
         ...prevMessages,
-        { sender_name, content, room, created_time },
+        { sender_name, content, room, createdAt },
       ]);
     });
 
@@ -51,21 +36,16 @@ const Chat = () => {
   const msgBodyToSend = {
     sender_name: user?.username,
     room: user?.room,
-    created_time: Date.now(),
+    createdAt: Date.now(),
     content: msgToSend,
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    socket.timeout(1000).emit("send_message", msgBodyToSend, (err, res) => {
-      if (err) {
-        socket.emit("send_message", msgBodyToSend);
-      } else if (res.success) {
-        setMessages((prevMessages) => [...prevMessages, msgBodyToSend]);
-        toast.success("msg send success");
-        setMsgToSend("");
-      }
-    });
+    sendMessage(msgToSend);
+    setMessages((prevMessages) => [...prevMessages, msgBodyToSend]);
+    toast.success("msg send success");
+    setMsgToSend("");
   };
   return (
     <section id="chatscreen" className="h-screen col-span-4 p-2 overflow-auto">
@@ -74,7 +54,7 @@ const Chat = () => {
           <Message
             key={index}
             content={message?.content}
-            timestamp={message?.created_time}
+            timestamp={message?.createdAt}
             sender={message?.sender_name}
           />
         ))}
