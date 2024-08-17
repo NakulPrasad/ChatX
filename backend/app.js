@@ -4,7 +4,7 @@ const helmet = require('helmet')
 const morgan = require('morgan')
 const cors = require('cors')
 const { createServer } = require('node:http')
-const getSocketIo = require('./sockets/SocketManager.js')
+const getSocketIo = require('./sockets/SocketManager2.js')
 const { getMessages } = require('./utils/messageStore.js')
 
 const app = express()
@@ -19,7 +19,7 @@ const corsOptions = {
 
 }
 app.use(cors(corsOptions))
-app.use(morgan('dev'))
+app.use(morgan('combined'));
 
 //socket.io
 const httpServer = createServer(app)
@@ -33,7 +33,6 @@ app.get('/', (req, res) => {
 app.get('/rooms/:roomId/messages', (req, res) => {
     const roomId = req.params.roomId
     const messages = getMessages(roomId)
-    // debugger
     res.json(messages)
 })
 

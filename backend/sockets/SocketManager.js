@@ -1,7 +1,5 @@
 const { Server } = require('socket.io')
 const { getMessages, saveMessage } = require('../utils/messageStore.js')
-const ChatServer = require('../observers/ChatServer.js')
-const Client = require('../observers/Client.js')
 
 const getSocketIo = (httpServer) => {
     const io = new Server(httpServer, {

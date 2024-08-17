@@ -52,10 +52,15 @@ const useChatRoomManager = () => {
 
     useEffect(() => {
         socket.timeout(1000).emit("request_chatroom_users", LoggedInUserRef.current, (err, res) => {
-            if (!res.success) toast.error(res.message | 'Error while fetching chatroom users')
+            if (!res) {
+
+                toast.error(res.message | 'Error while fetching chatroom users')
+                console.error("Error while fetching chatroom users", res);
+            }
+
             setCurrentUsersRef.current(res.users)
         });
-    }, [userJoinOrLeave, isLoggedIn])
+    }, [userJoinOrLeave])
 
     const joinRoom = (userAndRoom) => {
         socket.timeout(1000).emit("join_room", userAndRoom, (err, res) => {

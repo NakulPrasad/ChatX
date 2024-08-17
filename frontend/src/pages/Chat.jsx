@@ -13,6 +13,7 @@ const Chat = () => {
   useEffect(() => {
     socket.on("join_room_greet", (data) => {
       toast.info(data.message);
+      console.log(data);
     });
 
     socket.on("receive_message", (data) => {
