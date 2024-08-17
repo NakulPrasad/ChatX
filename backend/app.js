@@ -22,6 +22,10 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 app.use(morgan('dev'));
+app.use(function (req, res, next) {
+    res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' blob:;");
+    return next();
+});
 
 //socket.io
 const httpServer = createServer(app)
