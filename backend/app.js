@@ -14,8 +14,9 @@ const PORT = process.env.PORT || 5000
 
 //middlewares
 app.use(helmet())
+const ORIGINS = process.env.ORIGINS.split('|');
 const corsOptions = {
-    origin: ['http://127.0.0.1:5173', 'http://localhost:5173'],
+    origin: ORIGINS,
 
 }
 app.use(cors(corsOptions))
@@ -25,9 +26,20 @@ app.use(morgan('dev'));
 const httpServer = createServer(app)
 const socketManagerAdapter = new SocketManagerAdapter(httpServer);
 
-app.get('/', (req, res) => {
-    res.send('server working fine')
-})
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+
+    app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+    });
+} else {
+    app.get('/', (req, res) => {
+        res.send('Development mode: Server is running but not serving static files');
+    });
+}
+
 
 app.get('/rooms/:roomId/messages', (req, res) => {
     const roomId = req.params.roomId
@@ -37,5 +49,5 @@ app.get('/rooms/:roomId/messages', (req, res) => {
 
 
 httpServer.listen(PORT, () => {
-    console.log(`Server running on ${PORT}`);
+    console.log(`Server is running on port ${PORT} in ${isProduction ? 'production' : 'development'} mode`);
 })

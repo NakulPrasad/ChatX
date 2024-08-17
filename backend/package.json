@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "backend": "nodemon --inspect --require dotenv/config app.js"
+    "backend": "nodemon --inspect --require dotenv/config app.js",
+    "deploy": "node -r dotenv/config app.js"
   },
   "author": "Nakul Prasad Mahato",
   "license": "ISC",
@@ -15,7 +16,6 @@
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
-    "sequelize": "^6.37.3",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
