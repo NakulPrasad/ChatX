@@ -17,20 +17,27 @@ const JoinRoom = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      socket.timeout(1000).emit("join_room", userAndRoom, (err, res) => {
-        if (!res?.success) {
-          toast.error(res?.message);
-        } else if (res?.success) {
-          toast.success(res?.message);
-          setItem("user", res?.user);
-          navigate("/");
-        }
+      const response = await new Promise((resolve, reject) => {
+        socket
+          .timeout(1000)
+          .emit("join_room", userAndRoom, (err, res) =>
+            err ? reject(err) : resolve(res)
+          );
       });
-    } catch (e) {
-      console.error(e);
+
+      response.success
+        ? (toast.success(response.message),
+          setItem("user", response.user),
+          navigate("/"))
+        : toast.error(response.message);
+    } catch (error) {
+      console.error(error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
+
   return (
     <section className="min-h-screen grid sm:grid-cols-2">
       <div className="flex justify-center items-center ">

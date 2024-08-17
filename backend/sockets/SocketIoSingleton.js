@@ -12,10 +12,8 @@ class SocketIoSingleton {
                 origin: "http://localhost:5173",
                 methods: ["GET", "POST"]
             },
-            connectionStateRecovery: {}
         });
 
-        // Initialize the SocketManager with the io instance
         this.socketManager = new SocketManager(this.io);
 
         SocketIoSingleton.instance = this;

@@ -3,6 +3,7 @@ import { UserContext } from "../context/UserContext";
 
 const SideBar = () => {
   const { currentUsers, user } = useContext(UserContext);
+  // console.log(currentUsers);
   return (
     <aside className="bg-primary hidden sm:block sm:flex flex-col text-white overflow-auto">
       <div className="flex flex-col h-screen justify-between">

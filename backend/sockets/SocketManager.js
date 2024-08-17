@@ -1,88 +1,98 @@
-const { Server } = require('socket.io')
 const { getMessages, saveMessage } = require('../utils/messageStore.js')
 
-const getSocketIo = (httpServer) => {
-    const io = new Server(httpServer, {
-        cors: {
-            origin: "http://localhost:5173",
-            methods: ["GET", "POST"]
-        },
-        connectionStateRecovery: {}
-    })
+class SocketManager {
+    constructor(io) {
+        this.io = io;
+        this.allUsers = [];
+        this.setupListeners();
+    }
 
-    let allUsers = []
-    const chatBotName = 'ChatBot'
-    const generateChatBotMessage = (username) => { return `${username} joined` }
+    setupListeners() {
+        this.io.on('connection', (socket) => {
+            this.handleConnection(socket);
+        });
+    }
 
-    io.on('connection', (socket) => {
-        socket.on('join_room', (data, cb) => {
-            const username = data?.username
-            const roomId = data?.roomId
-            if (!username || !roomId) {
-                if (allUsers.find(user => user.username === username && user.roomId === roomId)) {
-                    cb({ success: false, message: 'Username already taken' })
-                    return
-                }
-            }
-            socket.join(roomId)
+    handleConnection(socket) {
+        socket.on('join_room', (data, cb) => this.handleJoinRoom(socket, data, cb));
+        socket.on('disconnect', () => this.handleDisconnect(socket));
+        socket.on('requestChatroomUsers', (data, cb) => this.handleRequestChatroomUsers(data, cb));
+        socket.on('sendMessage', (data, cb) => this.handleSendMessage(socket, data, cb));
+    }
 
-            const createdAt = Date.now();
-            const chatBotMessage = generateChatBotMessage(username)
-            const messageToSend = { sender_name: chatBotName, content: chatBotMessage, roomId, createdAt }
-            socket.to(roomId).emit('receive_message', messageToSend)
+    handleJoinRoom(socket, data, cb) {
+        if (!data) {
+            cb({ success: false, message: 'Invalid data' });
+            console.error("Failed to join roomId:", data);
+            return;
+        }
+        const { username, roomId } = data;
+        if (!username || !roomId) {
+            cb({ success: false, message: 'Invalid username or roomId' });
+            console.error('Invalid username or roomId:', data);
+            return;
+        }
 
+        socket.join(roomId);
 
-            io.to(roomId).emit('join_room_greet', {
-                message: `${username} joined`,
-                username: username,
-            })
-
-            const previousMessages = getMessages(roomId)
-            socket.emit('previousMessages', previousMessages)
-
-
-            if (!allUsers.find(user => user.username === username && user.roomId === roomId))
-                allUsers.push({ username, roomId, id: socket.id })
-
-            cb({ success: true, message: 'Joined roomId successfully!', user: { id: socket.id, username, roomId } });
-        })
-        socket.on('disconnect', () => {
-            const disconnected_user = allUsers.find(user => user.id === socket.id);
-
-            allUsers = allUsers.filter(user => user.id !== socket.id);
-
-            if (disconnected_user) {
-                socket.to(disconnected_user.roomId).emit('user_disconnect', {
-                    message: "User Disconnected"
-                });
-            }
+        this.io.to(roomId).emit('joinRoomMsg', {
+            message: `${username} joined`,
+            username: username,
         });
 
-        socket.on('request_chatroom_users', (data, cb) => {
-            const roomId = data?.roomId
-            if (!roomId) {
-                cb({ success: false, message: "Room Invalid" })
-                return
-            }
-            let chatRoomUsers = allUsers.filter(user => {
-                return user.roomId === roomId
-            })
-            cb({ success: true, users: chatRoomUsers })
+        // Send previous messages to the user
+        const previousMessages = getMessages(roomId);
+        socket.emit('previousMessages', previousMessages);
 
-        })
+        if (!this.allUsers.find(user => user.username === username && user.roomId === roomId)) {
+            this.allUsers.push({ username, roomId, id: socket.id });
+        }
 
-        socket.on('send_message', (data, cb) => {
-            const { sender_name, content, roomId, createdAt } = data
-            if (!sender_name || !content || !roomId || !createdAt) {
-                cb({ success: false, message: "Missing data fields" })
-                return
-            }
-            socket.to(roomId).emit('receive_message', { sender_name, content, roomId, createdAt })
-            saveMessage(roomId, { sender_name, content, roomId, createdAt })
-            cb({ success: true, message: "Message sent successfully!" })
-        })
+        cb({ success: true, message: `Joined ${roomId} successfully!`, user: { id: socket.id, username, roomId } });
+    }
 
-    })
-    return io
+    handleDisconnect(socket) {
+        const disconnectedUser = this.allUsers.find(user => user.id === socket.id);
+
+        this.allUsers = this.allUsers.filter(user => user.id !== socket.id);
+
+        if (disconnectedUser) {
+            this.io.to(disconnectedUser.roomId).emit('userDisconnect', {
+                message: `${disconnectedUser.username} Disconnected`
+            });
+        }
+    }
+
+    handleRequestChatroomUsers(data, cb) {
+        const roomId = data?.roomId;
+
+        if (!roomId) {
+            cb({ success: false, message: "Room Invalid" });
+            console.error('RoomId not valid : requestchatroomusers', roomId)
+            return;
+        }
+
+        const chatRoomUsers = this.allUsers.filter(user => user.roomId === roomId);
+        cb({ success: true, users: chatRoomUsers });
+    }
+
+    handleSendMessage(socket, data, cb) {
+        if (!data) {
+            cb({ success: false, message: 'Invalid data' });
+            console.error("Failed to send message:", data);
+            return;
+        }
+        const { sender_name, content, roomId, createdAt } = data;
+
+        if (!sender_name || !content || !roomId || !createdAt) {
+            cb({ success: false, message: "Missing data fields" });
+            return;
+        }
+
+        socket.to(roomId).emit('receiveMessage', { sender_name, content, roomId, createdAt });
+        saveMessage(roomId, { sender_name, content, roomId, createdAt });
+        cb({ success: true, message: "Message sent successfully!" });
+    }
 }
-module.exports = getSocketIo
+
+module.exports = SocketManager;

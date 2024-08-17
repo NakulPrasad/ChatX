@@ -5,7 +5,7 @@ import { useCookie } from "./useCookie";
 import { UserContext } from "../context/UserContext";
 
 const useChatRoomManager = () => {
-    const { getItem, setItem } = useCookie()
+    const { getItem } = useCookie()
     const LoggedInUser = getItem('user')
     const LoggedInUserRef = useRef(LoggedInUser)
     const { currentUsers, setCurrentUsers } = useContext(UserContext)
@@ -13,6 +13,7 @@ const useChatRoomManager = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [userJoinOrLeave, setUserJoinOrLeave] = useState(false)
     const [previousMessages, setPreviousMessages] = useState([])
+
     useEffect(() => {
         socket.on("connect", () => {
             toast.success("Server Connected");
@@ -24,56 +25,60 @@ const useChatRoomManager = () => {
             setIsLoggedIn(false)
         });
 
-        socket.on("user_disconnect", () => {
+        socket.on("userDisconnect", (data) => {
+            toast.info(data.message)
+            setUserJoinOrLeave(prev => !prev)
+        });
+
+        socket.on("joinRoomMsg", (data) => {
+            toast.info(data.message);
             setUserJoinOrLeave(prev => !prev)
         });
 
         return () => {
             socket.off('disconnect')
             socket.off('connect')
-            socket.off('user_disconnect')
-            socket.off("join_room_greet")
+            socket.off('userDisconnect')
+            socket.off('j')
         }
     }, [])
 
     useEffect(() => {
-        socket.timeout(1000).emit("join_room", LoggedInUserRef.current, (err, res) => {
-            if (res?.success) {
-                toast.success(`Joined Room ${LoggedInUserRef.current.roomId}`);
-            }
-        });
         socket.on("previousMessages", (data) => {
             setPreviousMessages(data)
         });
         return () => {
             socket.off('previousMessages')
         }
+    }, [])
+
+    useEffect(() => {
+        if (LoggedInUserRef.current && isLoggedIn === true) {
+            // console.log(LoggedInUserRef.current);
+            socket.timeout(1000).emit("join_room", LoggedInUserRef.current, (err, res) => {
+                if (res?.success) {
+                    toast.success(`Joined Room ${LoggedInUserRef.current.roomId}`);
+                }
+            });
+            return () => {
+                socket.off('join_room')
+            }
+        }
     }, [isLoggedIn])
 
     useEffect(() => {
-        socket.timeout(1000).emit("request_chatroom_users", LoggedInUserRef.current, (err, res) => {
-            if (!res) {
+        if (LoggedInUserRef.current) {
+            socket.timeout(1000).emit("requestChatroomUsers", LoggedInUserRef.current, (err, res) => {
+                if (err) {
+                    toast.error('Error while fetching chatroom users')
+                    console.error("Error while fetching chatroom users", err);
+                }
 
-                toast.error(res.message | 'Error while fetching chatroom users')
-                console.error("Error while fetching chatroom users", res);
-            }
+                setCurrentUsersRef.current(res.users)
+            });
+        }
 
-            setCurrentUsersRef.current(res.users)
-        });
-    }, [userJoinOrLeave])
-
-    // const joinRoom = (userAndRoom) => {
-    //     socket.timeout(1000).emit("join_room", userAndRoom, (err, res) => {
-    //         if (!res?.success) {
-    //             toast.error(res?.message);
-    //             return false
-    //         } else if (res?.success) {
-    //             toast.success(res?.message);
-    //             setItem("user", res?.user);
-    //             return true
-    //         }
-    //     });
-    // }
+    }, [userJoinOrLeave, isLoggedIn])
 
     const sendMessage = (message) => {
         const msgBodyToSend = {
@@ -82,9 +87,10 @@ const useChatRoomManager = () => {
             createdAt: Date.now(),
             content: message,
         };
-        socket.timeout(1000).emit("send_message", msgBodyToSend, (err) => {
+        socket.timeout(1000).emit("sendMessage", msgBodyToSend, (err) => {
             if (err) {
-                socket.emit("send_message", msgBodyToSend);
+                socket.emit("sendMessage", msgBodyToSend);
+                console.error("Error Occured While Sending Message", err);
             }
         });
     }

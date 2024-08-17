@@ -11,13 +11,9 @@ const Chat = () => {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    socket.on("join_room_greet", (data) => {
-      toast.info(data.message);
-    });
-
-    socket.on("receive_message", (data) => {
+    socket.on("receiveMessage", (data) => {
       const { sender_name, content, roomId, createdAt } = data;
-      console.log("Receive Messages", data);
+      // console.log("Receive Messages", data);
       setMessages((prevMessages) => [
         ...prevMessages,
         { sender_name, content, roomId, createdAt },
@@ -26,7 +22,7 @@ const Chat = () => {
 
     return () => {
       socket.off("join_room_greet");
-      socket.off("receive_message");
+      socket.off("receiveMessage");
     };
   }, [socket, user]);
 
