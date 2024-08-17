@@ -1,14 +1,19 @@
 {
   "name": "chatx",
   "version": "1.0.0",
+  "homepage": "https://github.com/NakulPrasad/ChatX",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "backend": "cd backend && npm run backend",
     "frontend": "cd frontend && npm run frontend",
-    "deploy": "cd frontend && npm run deploy && cd ../backend && npm install"
+    "predeploy": "cd ./frontend && npm run build",
+    "deploy": "cd ./frontend && gh-pages -d dist"
   },
   "author": "Nakul Prasad Mahato",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
+  }
 }
