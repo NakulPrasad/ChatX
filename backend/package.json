@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "backend": "nodemon --inspect --require dotenv/config app.js",
-    "deploy": "node -r dotenv/config app.js"
+    "deploy": "cross-env NODE_ENV=production node -r dotenv/config app.js"
   },
   "author": "Nakul Prasad Mahato",
   "license": "ISC",
@@ -19,6 +19,7 @@
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "eslint": "^9.9.0",
     "eslint-plugin-jsdoc": "^50.2.2",
     "jsdoc": "^4.0.3"

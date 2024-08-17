@@ -2,6 +2,7 @@ const express = require('express')
 const dotenv = require('dotenv')
 const helmet = require('helmet')
 const morgan = require('morgan')
+const path = require('node:path')
 const cors = require('cors')
 const { createServer } = require('node:http')
 const { getMessages } = require('./utils/messageStore.js')
@@ -29,10 +30,10 @@ const socketManagerAdapter = new SocketManagerAdapter(httpServer);
 const isProduction = process.env.NODE_ENV === 'production';
 if (isProduction) {
 
-    app.use(express.static(path.join(__dirname, '../frontend/build')));
+    app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+        res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
     });
 } else {
     app.get('/', (req, res) => {
