@@ -29,40 +29,18 @@ class Client extends ObserverInterface {
         this.username = null;
     }
 
-    joinRoom(roomId, username) {
+    joinRoom(roomId, username, socket) {
         this.roomId = roomId;  // Set the client's current room
         this.username = username
+        socket.join(roomId)
+
     }
 
     /**
      * Updates the client with a new notification.
-     * @param {Object} notification - The notification to be processed.
-     * @param {string} notification.message - The message contained in the notification.
-     * @param {string} notification.roomId - The room ID associated with the notification.
      */
-    update(event, socket, notification) {
-        const { message, roomId } = notification;
-        if (this.roomId === roomId) {
-            if (event === 'receive_message') {
-
-                try {
-                    console.log(`Received new message:`, message, socket);
-                    socket.to(roomId).emit(event, message);
-                } catch (error) {
-                    console.error(`Error emitting event ${event}:`, error);
-                }
-            }
-            else if (event === 'join_room_message') {
-
-                try {
-                    console.log(`Received new message: ${message}`);
-                    socket.to(roomId).emit(event, message);
-                } catch (error) {
-                    console.error(`Error emitting event ${event}:`, error);
-                }
-            }
-
-        }
+    update() {
+        //No need to implement as socket.id changes on each reload, handle by ChatRoom notify method
     }
 }
 
