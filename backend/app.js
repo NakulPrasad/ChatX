@@ -4,7 +4,7 @@ const helmet = require('helmet')
 const morgan = require('morgan')
 const cors = require('cors')
 const { createServer } = require('node:http')
-const getSocketIo = require('./sockets/SocketManager2.js')
+const getSocketIo = require('./sockets/SocketManager.js')
 const { getMessages } = require('./utils/messageStore.js')
 
 const app = express()

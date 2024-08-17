@@ -2,11 +2,14 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import useChatRoomManager from "../hooks/useChatRoomManager.js";
 import sideImage from "/join.gif";
+import { toast } from "react-toastify";
+import { useCookie } from "../hooks/useCookie.js";
 
 const JoinRoom = () => {
   const navigate = useNavigate();
-  const { joinRoom } = useChatRoomManager();
-  const [userAndRoom, setUserAndRoom] = useState({ username: "", room: "" });
+  const { socket } = useChatRoomManager();
+  const { setItem } = useCookie();
+  const [userAndRoom, setUserAndRoom] = useState({ username: "", roomId: "" });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,8 +18,15 @@ const JoinRoom = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      joinRoom(userAndRoom);
-      navigate("/");
+      socket.timeout(1000).emit("join_room", userAndRoom, (err, res) => {
+        if (!res?.success) {
+          toast.error(res?.message);
+        } else if (res?.success) {
+          toast.success(res?.message);
+          setItem("user", res?.user);
+          navigate("/");
+        }
+      });
     } catch (e) {
       console.error(e);
     }
@@ -51,8 +61,8 @@ const JoinRoom = () => {
                 </label>
                 <input
                   type="text"
-                  title="room"
-                  name="room"
+                  title="roomId"
+                  name="roomId"
                   placeholder="React"
                   minLength={4}
                   onChange={handleChange}

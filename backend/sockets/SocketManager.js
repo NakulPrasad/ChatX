@@ -17,34 +17,34 @@ const getSocketIo = (httpServer) => {
     io.on('connection', (socket) => {
         socket.on('join_room', (data, cb) => {
             const username = data?.username
-            const room = data?.room
-            if (!username || !room) {
-                if (allUsers.find(user => user.username === username && user.room === room)) {
+            const roomId = data?.roomId
+            if (!username || !roomId) {
+                if (allUsers.find(user => user.username === username && user.roomId === roomId)) {
                     cb({ success: false, message: 'Username already taken' })
                     return
                 }
             }
-            socket.join(room)
+            socket.join(roomId)
 
             const createdAt = Date.now();
             const chatBotMessage = generateChatBotMessage(username)
-            const messageToSend = { sender_name: chatBotName, content: chatBotMessage, room, createdAt }
-            socket.to(room).emit('receive_message', messageToSend)
-            saveMessage(room, messageToSend)
+            const messageToSend = { sender_name: chatBotName, content: chatBotMessage, roomId, createdAt }
+            socket.to(roomId).emit('receive_message', messageToSend)
 
-            io.to(room).emit('join_room_greet', {
+
+            io.to(roomId).emit('join_room_greet', {
                 message: `${username} joined`,
                 username: username,
             })
 
-            const previousMessages = getMessages(room)
+            const previousMessages = getMessages(roomId)
             socket.emit('previousMessages', previousMessages)
 
 
-            if (!allUsers.find(user => user.username === username && user.room === room))
-                allUsers.push({ username, room, id: socket.id })
+            if (!allUsers.find(user => user.username === username && user.roomId === roomId))
+                allUsers.push({ username, roomId, id: socket.id })
 
-            cb({ success: true, message: 'Joined room successfully!', user: { id: socket.id, username, room } });
+            cb({ success: true, message: 'Joined roomId successfully!', user: { id: socket.id, username, roomId } });
         })
         socket.on('disconnect', () => {
             const disconnected_user = allUsers.find(user => user.id === socket.id);
@@ -52,33 +52,33 @@ const getSocketIo = (httpServer) => {
             allUsers = allUsers.filter(user => user.id !== socket.id);
 
             if (disconnected_user) {
-                socket.to(disconnected_user.room).emit('user_disconnect', {
+                socket.to(disconnected_user.roomId).emit('user_disconnect', {
                     message: "User Disconnected"
                 });
             }
         });
 
         socket.on('request_chatroom_users', (data, cb) => {
-            const room = data?.room
-            if (!room) {
+            const roomId = data?.roomId
+            if (!roomId) {
                 cb({ success: false, message: "Room Invalid" })
                 return
             }
             let chatRoomUsers = allUsers.filter(user => {
-                return user.room === room
+                return user.roomId === roomId
             })
             cb({ success: true, users: chatRoomUsers })
 
         })
 
         socket.on('send_message', (data, cb) => {
-            const { sender_name, content, room, createdAt } = data
-            if (!sender_name || !content || !room || !createdAt) {
+            const { sender_name, content, roomId, createdAt } = data
+            if (!sender_name || !content || !roomId || !createdAt) {
                 cb({ success: false, message: "Missing data fields" })
                 return
             }
-            socket.to(room).emit('receive_message', { sender_name, content, room, createdAt })
-            saveMessage(room, { sender_name, content, room, createdAt })
+            socket.to(roomId).emit('receive_message', { sender_name, content, roomId, createdAt })
+            saveMessage(roomId, { sender_name, content, roomId, createdAt })
             cb({ success: true, message: "Message sent successfully!" })
         })
 

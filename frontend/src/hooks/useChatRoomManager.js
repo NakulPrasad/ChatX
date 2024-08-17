@@ -39,7 +39,7 @@ const useChatRoomManager = () => {
     useEffect(() => {
         socket.timeout(1000).emit("join_room", LoggedInUserRef.current, (err, res) => {
             if (res?.success) {
-                toast.success(`Joined Room ${LoggedInUserRef.current.room}`);
+                toast.success(`Joined Room ${LoggedInUserRef.current.roomId}`);
             }
         });
         socket.on("previousMessages", (data) => {
@@ -62,23 +62,23 @@ const useChatRoomManager = () => {
         });
     }, [userJoinOrLeave])
 
-    const joinRoom = (userAndRoom) => {
-        socket.timeout(1000).emit("join_room", userAndRoom, (err, res) => {
-            if (!res?.success) {
-                toast.error(res?.message);
-                return false
-            } else if (res?.success) {
-                toast.success(res?.message);
-                setItem("user", res?.user);
-                return true
-            }
-        });
-    }
+    // const joinRoom = (userAndRoom) => {
+    //     socket.timeout(1000).emit("join_room", userAndRoom, (err, res) => {
+    //         if (!res?.success) {
+    //             toast.error(res?.message);
+    //             return false
+    //         } else if (res?.success) {
+    //             toast.success(res?.message);
+    //             setItem("user", res?.user);
+    //             return true
+    //         }
+    //     });
+    // }
 
     const sendMessage = (message) => {
         const msgBodyToSend = {
             sender_name: LoggedInUserRef.current?.username,
-            room: LoggedInUserRef.current?.room,
+            roomId: LoggedInUserRef.current?.roomId,
             createdAt: Date.now(),
             content: message,
         };
@@ -91,7 +91,7 @@ const useChatRoomManager = () => {
 
 
 
-    return { socket, currentUsers, previousMessages, sendMessage, joinRoom };
+    return { socket, currentUsers, previousMessages, sendMessage, };
 };
 
 export default useChatRoomManager

@@ -28,12 +28,12 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // <StrictMode>
+  <UserProvider>
     <ToastContainer />
-    <UserProvider>
-      <RouterProvider router={router}></RouterProvider>
-    </UserProvider>
-  </StrictMode>
+    <RouterProvider router={router}></RouterProvider>
+  </UserProvider>
+  // </StrictMode>
 );
 
 PrivateRoute.propTypes = {

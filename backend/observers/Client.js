@@ -40,14 +40,14 @@ class Client extends ObserverInterface {
      * @param {string} notification.message - The message contained in the notification.
      * @param {string} notification.roomId - The room ID associated with the notification.
      */
-    update(event, notification) {
+    update(event, socket, notification) {
         const { message, roomId } = notification;
         if (this.roomId === roomId) {
             if (event === 'receive_message') {
 
                 try {
-                    console.log(`Received new message: ${message}`);
-                    this.socket.emit(event, message);
+                    console.log(`Received new message:`, message, socket);
+                    socket.to(roomId).emit(event, message);
                 } catch (error) {
                     console.error(`Error emitting event ${event}:`, error);
                 }
@@ -56,7 +56,7 @@ class Client extends ObserverInterface {
 
                 try {
                     console.log(`Received new message: ${message}`);
-                    this.socket.emit(event, message);
+                    socket.to(roomId).emit(event, message);
                 } catch (error) {
                     console.error(`Error emitting event ${event}:`, error);
                 }

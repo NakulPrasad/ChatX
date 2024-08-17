@@ -33,7 +33,7 @@ const SideBar = () => {
             Join Room
           </button>
           <p className="font-medium pl-2 p-2">Username: {user?.username}</p>
-          <p className="font-medium pl-2 p-2">Room: {user?.room}</p>
+          <p className="font-medium pl-2 p-2">Room: {user?.roomId}</p>
         </div>
       </div>
     </aside>

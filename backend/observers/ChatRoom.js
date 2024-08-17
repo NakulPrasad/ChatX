@@ -7,42 +7,43 @@ class ChatRoom extends ObservableInterface {
         this.roomUsers = {}
     }
     subscribe(user) {
-        if (!this.allUsers.find(u => u.username === user.username && u.room === user.room))
+        if (!this.allUsers.find(u => u.username === user.username && u.roomId === user.roomId))
             this.allUsers.push(user)
     }
     addUser(user) {
         // console.log(user);
-        if (!this.roomUsers[user.room]) {
-            this.roomUsers[user.room] = []
+        if (!this.roomUsers[user.roomId]) {
+            this.roomUsers[user.roomId] = []
         }
-        if (!this.roomUsers[user.room].find(u => u.username === user.username && u.room === user.room))
-            this.roomUsers[user.room].push(user)
+        if (!this.roomUsers[user.roomId].find(u => u.username === user.username && u.roomId === user.roomId))
+            this.roomUsers[user.roomId].push(user)
     }
     unsubscribe(socketId) {
-        const user = this.allUsers.find(user => user.id === socketId);
+        const user = this.allUsers.find(user => user.socketId === socketId);
         if (!user) return;
 
         // Remove user from allUsers
-        this.allUsers = this.allUsers.filter(user => user.id !== socketId);
+        this.allUsers = this.allUsers.filter(user => user.socketId !== socketId);
 
         // Remove user from roomUsers
-        this.roomUsers[user.room] = this.roomUsers[user.room].filter(user => user.id !== socketId);
+        this.roomUsers[user.roomId] = this.roomUsers[user.roomId].filter(user => user.socketId !== socketId);
 
-        // Clean up room if empty
-        if (this.roomUsers[user.room].length === 0) {
-            delete this.roomUsers[user.room];
+        // Clean up roomId if empty
+        if (this.roomUsers[user.roomId].length === 0) {
+            delete this.roomUsers[user.roomId];
         }
 
         return user;
     }
-    notify(event, notification) {
-        const { roomId } = notification
-        const usersInRoom = this.roomUsers[roomId] || []
+    notify(event, socket, roomId, message) {
+        console.log("notify :", event, message);
+        // const usersInRoom = this.roomUsers[roomId] || []
         // console.log(usersInRoom);
-        usersInRoom.forEach(user => {
+        // usersInRoom.forEach(user => {
 
-            user.update(event, notification)
-        })
+        //     user.update(event, socket, notification)
+        // })
+        socket.to(roomId).emit(event, message)
 
     }
     getRoomUsers(roomId) {
@@ -52,8 +53,9 @@ class ChatRoom extends ObservableInterface {
         return this.allUsers || [];
     }
 
-    sendMessages(roomId, message) {
-        this.notify('receive_message', { roomId, message })
+    sendMessages(roomId, message, socket) {
+        // console.log(roomId, message);
+        this.notify('receive_message', socket, roomId, message)
 
     }
     joinRoomMessage(roomId, message) {

@@ -13,14 +13,14 @@ const Chat = () => {
   useEffect(() => {
     socket.on("join_room_greet", (data) => {
       toast.info(data.message);
-      console.log(data);
     });
 
     socket.on("receive_message", (data) => {
-      const { sender_name, content, room, createdAt } = data;
+      const { sender_name, content, roomId, createdAt } = data;
+      console.log("Receive Messages", data);
       setMessages((prevMessages) => [
         ...prevMessages,
-        { sender_name, content, room, createdAt },
+        { sender_name, content, roomId, createdAt },
       ]);
     });
 
@@ -40,7 +40,7 @@ const Chat = () => {
 
   const msgBodyToSend = {
     sender_name: user?.username,
-    room: user?.room,
+    roomId: user?.roomId,
     createdAt: Date.now(),
     content: msgToSend,
   };
