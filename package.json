@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "backend": "cd backend && npm run backend",
     "frontend": "cd frontend && npm run frontend",
-    "deploy": "cd frontend && npm run deploy && cd ../backend"
+    "deploy": "cd frontend && npm run deploy && cd ../backend && npm install"
   },
-  "author": "",
+  "author": "Nakul Prasad Mahato",
   "license": "ISC"
 }
