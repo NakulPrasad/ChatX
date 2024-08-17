@@ -1,6 +1,5 @@
 const { Server } = require('socket.io');
-const SocketManager = require('./SocketManager'); // Adjust the path as necessary
-
+const SocketManager = require('./SocketManager');
 class SocketIoSingleton {
     constructor(httpServer) {
         if (SocketIoSingleton.instance) {

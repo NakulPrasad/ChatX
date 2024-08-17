@@ -1,7 +1,8 @@
 const { getMessages, saveMessage } = require('../utils/messageStore.js')
-
-class SocketManager {
+const SocketManagerInterface = require('./SocketManagerInterface.js')
+class SocketManager extends SocketManagerInterface {
     constructor(io) {
+        super()
         this.io = io;
         this.allUsers = [];
         this.setupListeners();

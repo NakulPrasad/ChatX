@@ -4,9 +4,8 @@ const helmet = require('helmet')
 const morgan = require('morgan')
 const cors = require('cors')
 const { createServer } = require('node:http')
-// const getSocketIo = require('./sockets/SocketManager.js')
-const SocketIoSingleton = require('./sockets/SocketIoSingleton.js')
 const { getMessages } = require('./utils/messageStore.js')
+const SocketManagerAdapter = require('./sockets/SocketManagerAdapter.js')
 
 const app = express()
 
@@ -20,12 +19,11 @@ const corsOptions = {
 
 }
 app.use(cors(corsOptions))
-app.use(morgan('combined'));
+app.use(morgan('dev'));
 
 //socket.io
 const httpServer = createServer(app)
-const ioInstance = SocketIoSingleton.getInstance(httpServer);
-
+const socketManagerAdapter = new SocketManagerAdapter(httpServer);
 
 app.get('/', (req, res) => {
     res.send('server working fine')
