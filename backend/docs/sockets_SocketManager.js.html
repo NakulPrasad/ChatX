@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: sockets/SocketManager.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: sockets/SocketManager.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview This module defines the SocketManager class, which extends SocketManagerInterface. 
+ * It handles socket events such as joining rooms, disconnecting, requesting chatroom users, and sending messages.
+ */
+
+const { getMessages, saveMessage } = require('../utils/messageStore.js');
+const SocketManagerInterface = require('./SocketManagerInterface.js');
+const ChatRoom = require('../observers/ChatRoom.js');
+const Client = require('../observers/Client.js');
+
+const chatRoom = new ChatRoom();
+
+/**
+ * @class SocketManager
+ * @extends SocketManagerInterface
+ * 
+ * @classdesc The SocketManager class manages socket connections and events, including handling room joins, 
+ * disconnections, chatroom user requests, and message sending.
+ */
+class SocketManager extends SocketManagerInterface {
+    /**
+     * Constructs a SocketManager instance and sets up event listeners for the Socket.IO server.
+     * 
+     * @param {Server} io - The Socket.IO server instance.
+     */
+    constructor(io) {
+        super();
+        this.io = io;
+        this.allUsers = [];
+        this.setupListeners();
+    }
+
+    /**
+     * Sets up listeners for socket events.
+     * 
+     * @private
+     */
+    setupListeners() {
+        this.io.on('connection', (socket) => {
+            this.client = new Client(socket.id);
+            this.handleConnection(socket);
+        });
+    }
+
+    /**
+     * Handles socket connection events and sets up event handlers.
+     * 
+     * @param {Socket} socket - The socket instance representing the connected client.
+     */
+    handleConnection(socket) {
+        socket.on('join_room', (data, cb) => this.handleJoinRoom(socket, data, cb));
+        socket.on('disconnect', () => this.handleDisconnect(socket));
+        socket.on('requestChatroomUsers', (data, cb) => this.handleRequestChatroomUsers(data, cb));
+        socket.on('sendMessage', (data, cb) => this.handleSendMessage(socket, data, cb));
+    }
+
+    /**
+     * Handles a socket joining a room.
+     * 
+     * @param {Socket} socket - The socket instance representing the connected client.
+     * @param {Object} data - The data provided by the client when joining a room.
+     * @param {Function} [cb] - The callback function to be executed after the join room operation.
+     */
+    handleJoinRoom(socket, data, cb = () => { }) {
+        if (!data) {
+            cb({ success: false, message: 'Invalid data' });
+            console.error("Failed to join roomId:", data);
+            return;
+        }
+
+        const { username, roomId } = data;
+
+        if (!username || !roomId) {
+            cb({ success: false, message: 'Invalid username or roomId' });
+            console.error('Invalid username or roomId:', data);
+            return;
+        }
+
+        // Check if username is already taken in the roomId
+        if (chatRoom.getRoomUsers(roomId).some(user => user.username === username)) {
+            cb({ success: false, message: 'Username already taken' });
+            console.info('Username already taken:', username);
+            return;
+        }
+
+        // Set this.client's roomId and subscribe to the chat roomId
+        this.client.joinRoom(roomId, username, socket);
+        chatRoom.subscribe(this.client);
+
+        // Add user to the chat roomId
+        chatRoom.addUser(this.client);
+
+        // Notify room about the new user
+        chatRoom.joinRoomMessage(roomId, {
+            message: `${username} joined`,
+            username: username,
+        }, this.io);
+
+        // Send previous messages to the user
+        const previousMessages = getMessages(roomId);
+        socket.emit('previousMessages', previousMessages);
+
+        cb({ success: true, message: `Joined ${roomId} successfully!`, user: { id: socket.id, username, roomId } });
+    }
+
+    /**
+     * Handles the disconnection of a socket.
+     * 
+     * @param {Socket} socket - The socket instance representing the disconnected client.
+     */
+    handleDisconnect(socket) {
+        const disconnectedUser = chatRoom.unsubscribe(socket.id);
+        if (disconnectedUser) {
+            chatRoom.userDisconnect(disconnectedUser.roomId, {
+                message: `${disconnectedUser.username} Disconnected`
+            }, this.io);
+        }
+    }
+
+    /**
+     * Handles a request for chatroom users.
+     * 
+     * @param {Object} data - The data containing information about the chatroom.
+     * @param {Function} [cb] - The callback function to be executed with the list of users.
+     */
+    handleRequestChatroomUsers(data, cb = () => { }) {
+        if (!data) {
+            cb({ success: false, message: "Invalid Request" });
+            console.error("Invalid Request:", data);
+            return;
+        }
+
+        const { roomId } = data;
+
+        if (!roomId) {
+            cb({ success: false, message: "Room Invalid" });
+            console.error('Invalid roomId:', roomId);
+            return;
+        }
+
+        // Fetch users in the roomId
+        const chatRoomUsers = chatRoom.getRoomUsers(roomId);
+        cb({ success: true, users: chatRoomUsers });
+    }
+
+    /**
+     * Handles sending a message through the socket.
+     * 
+     * @param {Socket} socket - The socket instance representing the connected client.
+     * @param {Object} data - The data containing the message information.
+     * @param {Function} [cb] - The callback function to be executed after the message is sent.
+     */
+    handleSendMessage(socket, data, cb = () => { }) {
+        if (!data) {
+            cb({ success: false, message: 'Invalid data' });
+            console.error("Failed to send message:", data);
+            return;
+        }
+
+        const { sender_name, content, roomId, createdAt } = data;
+
+        if (!sender_name || !content || !roomId || !createdAt) {
+            cb({ success: false, message: "Missing data fields" });
+            console.error('Missing data fields:', data);
+            return;
+        }
+
+        // Notify others in the roomId about the message
+        chatRoom.sendMessages(roomId, { sender_name, content, roomId, createdAt }, this.io, socket.id);
+
+        saveMessage(roomId, { sender_name, content, roomId, createdAt });
+        cb({ success: true, message: "Message sent successfully!" });
+    }
+}
+
+module.exports = SocketManager;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-messageStore.html">messageStore</a></li></ul><h3>Classes</h3><ul><li><a href="ChatRoom.html">ChatRoom</a></li><li><a href="Client.html">Client</a></li><li><a href="SocketIoSingleton.html">SocketIoSingleton</a></li><li><a href="SocketManager.html">SocketManager</a></li><li><a href="SocketManagerAdapter.html">SocketManagerAdapter</a></li><li><a href="SocketManagerInterface.html">SocketManagerInterface</a></li></ul><h3>Interfaces</h3><ul><li><a href="ObservableInterface.html">ObservableInterface</a></li><li><a href="ObserverInterface.html">ObserverInterface</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Sun Aug 18 2024 13:23:43 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

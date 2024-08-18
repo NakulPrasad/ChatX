@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: observers/ChatRoom.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: observers/ChatRoom.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const ObservableInterface = require('../interfaces/ObservableInterface');
+
+/**
+ * Chat room that users can join, leave, and send messages in.
+ * @extends ObservableInterface
+ */
+class ChatRoom extends ObservableInterface {
+    /**
+     * Initializes a new chat room.
+     */
+    constructor() {
+        super();
+        /**
+         * List of all users.
+         * @type {Array&lt;Client>}
+         */
+        this.allUsers = [];
+
+        /**
+         * Users grouped by room.
+         * @type {Object&lt;string, Array&lt;Client>>}
+         */
+        this.roomUsers = {};
+    }
+
+    /**
+     * Adds a user to the chat room.
+     * @param {Client} user
+     */
+    subscribe(user) {
+        if (!this.allUsers.find(u => u.username === user.username &amp;&amp; u.roomId === user.roomId)) {
+            this.allUsers.push(user);
+        }
+    }
+
+    /**
+     * Adds a user to a specific room.
+     * @param {Client} user 
+     */
+    addUser(user) {
+        if (!this.roomUsers[user.roomId]) {
+            this.roomUsers[user.roomId] = [];
+        }
+        if (!this.roomUsers[user.roomId].find(u => u.username === user.username &amp;&amp; u.roomId === user.roomId)) {
+            this.roomUsers[user.roomId].push(user);
+        }
+    }
+
+    /**
+     * Removes a user based on socket ID.
+     * @param {string} socketId 
+     * @returns {?Client} Removed user or null.
+     */
+    unsubscribe(socketId) {
+        const user = this.allUsers.find(user => user.socketId === socketId);
+        if (!user) return null;
+
+        this.allUsers = this.allUsers.filter(user => user.socketId !== socketId);
+        this.roomUsers[user.roomId] = this.roomUsers[user.roomId].filter(user => user.socketId !== socketId);
+
+        if (this.roomUsers[user.roomId].length === 0) {
+            delete this.roomUsers[user.roomId];
+        }
+
+        return user;
+    }
+
+    /**
+     * Notifies all users in a room.
+     * @param {string} event 
+     * @param {SocketIO.Server} io 
+     * @param {string} roomId 
+     * @param {Object} message 
+     * @param {string} senderSocketId 
+     */
+    notify(event, io, roomId, message, senderSocketId) {
+        const usersInRoom = this.roomUsers[roomId] || [];
+        usersInRoom.forEach(user => {
+            if (senderSocketId !== user.socketId) {
+                user.update(event, message, io);
+            }
+        });
+    }
+
+    /**
+     * Gets users in a room.
+     * @param {string} roomId 
+     * @returns {Array&lt;Client>}
+     */
+    getRoomUsers(roomId) {
+        return this.roomUsers[roomId] || [];
+    }
+
+    /**
+     * Gets all users.
+     * @returns {Array&lt;Client>}
+     */
+    getAllUsers() {
+        return this.allUsers;
+    }
+
+    /**
+     * Sends a message to all users in a room.
+     * @param {string} roomId 
+     * @param {Object} message 
+     * @param {SocketIO.Server} io 
+     * @param {string} senderSocketId 
+     */
+    sendMessages(roomId, message, io, senderSocketId) {
+        this.notify('receiveMessage', io, roomId, message, senderSocketId);
+    }
+
+    /**
+     * Notifies about a new user joining.
+     * @param {string} roomId 
+     * @param {Object} message 
+     * @param {SocketIO.Server} io 
+     */
+    joinRoomMessage(roomId, message, io) {
+        this.notify('joinRoomMsg', io, roomId, message);
+    }
+
+    /**
+     * Notifies about a user disconnecting.
+     * @param {string} roomId 
+     * @param {Object} message 
+     * @param {SocketIO.Server} io 
+     */
+    userDisconnect(roomId, message, io) {
+        this.notify('userDisconnect', io, roomId, message);
+    }
+}
+
+module.exports = ChatRoom;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="messageStore%250DHandles%2520saving%2520and%2520retrieving%2520messages%2520in%2520an%2520in-memory%2520store.module_.html">messageStoreHandles saving and retrieving messages in an in-memory store.</a></li></ul><h3>Classes</h3><ul><li><a href="ChatRoom.html">ChatRoom</a></li><li><a href="Client.html">Client</a></li><li><a href="HTTPAdapter.html">HTTPAdapter</a></li><li><a href="SocketIoAdapter.html">SocketIoAdapter</a></li></ul><h3>Interfaces</h3><ul><li><a href="CommunicationInterface.html">CommunicationInterface</a></li><li><a href="ObservableInterface.html">ObservableInterface</a></li><li><a href="ObserverInterface.html">ObserverInterface</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Sun Aug 18 2024 19:10:07 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

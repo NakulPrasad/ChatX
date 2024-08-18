@@ -39,7 +39,7 @@ const useChatRoomManager = () => {
             socket.off('disconnect')
             socket.off('connect')
             socket.off('userDisconnect')
-            socket.off('j')
+            socket.off('joinRoomMsg')
         }
     }, [])
 
