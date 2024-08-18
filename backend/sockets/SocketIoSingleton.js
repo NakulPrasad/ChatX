@@ -1,5 +1,10 @@
 const { Server } = require('socket.io');
 const SocketManager = require('./SocketManager');
+const ORIGINS = process.env.ORIGINS.split('|') || [
+    "http://localhost:5173",
+    "https://current-bridie-nakul-384e1fc1.koyeb.app",
+    "https://nakulprasad.github.io/ChatX/"
+];
 class SocketIoSingleton {
     constructor(httpServer) {
         if (SocketIoSingleton.instance) {
@@ -8,11 +13,7 @@ class SocketIoSingleton {
 
         this.io = new Server(httpServer, {
             cors: {
-                origin: [
-                    "http://localhost:5173",
-                    "https://current-bridie-nakul-384e1fc1.koyeb.app",
-                    "https://nakulprasad.me"
-                ],
+                origin: ORIGINS,
                 methods: ["GET", "POST"]
             },
         });

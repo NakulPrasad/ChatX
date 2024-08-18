@@ -9,7 +9,7 @@
     "backend": "cd backend && npm run backend",
     "frontend": "cd frontend && npm run frontend",
     "predeploy": "cd ./frontend && npm run build",
-    "deploy": "cd ./frontend && gh-pages -d dist"
+    "deploy-gh": "cd ./frontend && gh-pages -d dist"
   },
   "author": "Nakul Prasad Mahato",
   "license": "ISC",

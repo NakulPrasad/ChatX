@@ -39,8 +39,9 @@ class Client extends ObserverInterface {
     /**
      * Updates the client with a new notification.
      */
-    update() {
+    update(event, message, io) {
         //No need to implement as socket.id changes on each reload, handle by ChatRoom notify method
+        io.to(this.socketId).emit(event, message)
     }
 }
 

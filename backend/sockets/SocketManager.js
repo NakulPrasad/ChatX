@@ -16,7 +16,7 @@ class SocketManager extends SocketManagerInterface {
     setupListeners() {
         this.io.on('connection', (socket) => {
             this.client = new Client(socket.id)
-            console.log("Client", this.client);
+            // console.log("Client", this.client);
             this.handleConnection(socket);
         });
     }
@@ -28,7 +28,7 @@ class SocketManager extends SocketManagerInterface {
         socket.on('sendMessage', (data, cb) => this.handleSendMessage(socket, data, cb));
     }
 
-    handleJoinRoom(socket, data, cb) {
+    handleJoinRoom(socket, data, cb = () => { }) {
         if (!data) {
             cb({ success: false, message: 'Invalid data' });
             console.error("Failed to join roomId:", data);
@@ -50,13 +50,13 @@ class SocketManager extends SocketManagerInterface {
 
         // Set this.client's roomId and subscribe to the chat roomId
         this.client.joinRoom(roomId, username, socket)
-        console.log("Client added to roomId", this.client);
+        // console.log("Client added to roomId", this.client);
         chatRoom.subscribe(this.client)
-        console.log("Client subscribed to roomId", chatRoom.getAllUsers());
+        // console.log("Client subscribed to roomId", chatRoom.getAllUsers());
 
         // Add user to the chat roomId
         chatRoom.addUser(this.client);
-        console.log('Client added as user in current roomId', chatRoom.getRoomUsers(this.client.roomId));
+        // console.log('Client added as user in current roomId', chatRoom.getRoomUsers(this.client.roomId));
 
         chatRoom.joinRoomMessage(roomId, {
             message: `${username} joined`,
@@ -66,14 +66,14 @@ class SocketManager extends SocketManagerInterface {
         // Send previous messages to the user
         const previousMessages = getMessages(roomId);
         socket.emit('previousMessages', previousMessages);
-        console.log("Send Previous Messages", previousMessages);
+        // console.log("Send Previous Messages", previousMessages);
 
         cb({ success: true, message: `Joined ${roomId} successfully!`, user: { id: socket.id, username, roomId } });
     }
 
     handleDisconnect(socket) {
         const disconnectedUser = chatRoom.unsubscribe(socket.id)
-        console.log("Disconnected User", disconnectedUser);
+        // console.log("Disconnected User", disconnectedUser);
         if (disconnectedUser) {
             chatRoom.userDisconnect(disconnectedUser.roomId, {
                 message: `${disconnectedUser.username} Disconnected`
@@ -81,7 +81,7 @@ class SocketManager extends SocketManagerInterface {
         }
     }
 
-    handleRequestChatroomUsers(data, cb) {
+    handleRequestChatroomUsers(data, cb = () => { }) {
         if (!data) {
             cb({ success: false, message: "Invalid Request" })
             console.error("Invalid Request")
@@ -99,7 +99,7 @@ class SocketManager extends SocketManagerInterface {
         cb({ success: true, users: chatRoomUsers });
     }
 
-    handleSendMessage(socket, data, cb) {
+    handleSendMessage(socket, data, cb = () => { }) {
         if (!data) {
             cb({ success: false, message: 'Invalid data' });
             console.error("Failed to send message:", data);
@@ -112,7 +112,7 @@ class SocketManager extends SocketManagerInterface {
             return;
         }
         // Notify others in the roomId about the message
-        chatRoom.sendMessages(roomId, { sender_name, content, roomId, createdAt }, socket)
+        chatRoom.sendMessages(roomId, { sender_name, content, roomId, createdAt }, this.io, socket.id)
 
         // socket.to(roomId).emit('receiveMessage', { sender_name, content, roomId, createdAt });
         saveMessage(roomId, { sender_name, content, roomId, createdAt });

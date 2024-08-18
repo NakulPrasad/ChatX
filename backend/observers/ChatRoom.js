@@ -35,11 +35,15 @@ class ChatRoom extends ObservableInterface {
 
         return user;
     }
-    notify(event, socket, roomId, message) {
-        // console.log("notify :", event, message);
-        //Can't implement traditional notify method as socket.id changes on each reload, have to use socket.io's inbuild method to broadcast in room
-        socket.to(roomId).emit(event, message)
+    notify(event, io, roomId, message, senderSocketId) {
+        const usersInRoom = this.roomUsers[roomId] || []
+        // console.log("Users in Room", usersInRoom);
+        debugger
+        usersInRoom.forEach(user => {
 
+            if (senderSocketId !== user.socketId)
+                user.update(event, message, io)
+        })
     }
     getRoomUsers(roomId) {
         return this.roomUsers[roomId] || [];
@@ -48,9 +52,9 @@ class ChatRoom extends ObservableInterface {
         return this.allUsers || [];
     }
 
-    sendMessages(roomId, message, socket) {
+    sendMessages(roomId, message, io, senderSocketId) {
         // console.log(roomId, message);
-        this.notify('receiveMessage', socket, roomId, message)
+        this.notify('receiveMessage', io, roomId, message, senderSocketId)
 
     }
     joinRoomMessage(roomId, message, io) {
