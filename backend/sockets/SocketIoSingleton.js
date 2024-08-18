@@ -1,9 +1,12 @@
 const { Server } = require('socket.io');
 const SocketManager = require('./SocketManager');
+const dotenv = require('dotenv')
+dotenv.config()
 const ORIGINS = process.env.ORIGINS.split('|') || [
     "http://localhost:5173",
     "https://current-bridie-nakul-384e1fc1.koyeb.app",
-    "https://nakulprasad.github.io/ChatX/"
+    "https://nakulprasad.github.io/ChatX/",
+    "https://chat-x-dun.vercel.app"
 ];
 class SocketIoSingleton {
     constructor(httpServer) {
