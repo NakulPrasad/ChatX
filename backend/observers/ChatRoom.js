@@ -83,6 +83,21 @@ class ChatRoom extends ObservableInterface {
     }
 
     /**
+     * Notifies all users in a room. - HTTP
+     * @param {string} event 
+     * @param {string} roomId 
+     * @param {Object} message 
+     */
+    notifyHTTP(event, roomId, message, senderSessionId) {
+        const usersInRoom = this.roomUsers[roomId] || [];
+        usersInRoom.forEach(user => {
+            if (senderSessionId !== user.sessionId) {
+                user.update(event, message);
+            }
+        });
+    }
+
+    /**
      * Gets users in a room.
      * @param {string} roomId 
      * @returns {Array<Client>}
@@ -118,6 +133,16 @@ class ChatRoom extends ObservableInterface {
      */
     joinRoomMessage(roomId, message, io) {
         this.notify('joinRoomMsg', io, roomId, message);
+    }
+
+    /**
+     * Notifies about a new user joining. - HTTP METHOD
+     * @param {string} roomId 
+     * @param {Object} message 
+     * @param {SocketIO.Server} io 
+     */
+    joinRoomMessageHttp(roomId, message) {
+        this.notify('joinRoomMsg', roomId, message);
     }
 
     /**

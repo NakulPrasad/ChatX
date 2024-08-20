@@ -12,7 +12,7 @@ const cors = require('cors');
 const { createServer } = require('node:http');
 const { getMessages } = require('./utils/messageStore.js');
 const HTTPAdapter = require('./adapters/HTTPAdapter.js');
-const SocketIoAdapter = require('./adapters/SocketIoAdapter.js');
+const SocketIoService = require('./service/SocketIoService.js');
 
 dotenv.config();
 
@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 
 // Socket.IO setup
 const httpServer = createServer(app);
-const socketIoAdapter = new SocketIoAdapter(httpServer);
+const chatApp = new SocketIoService(httpServer);
 
 const isProduction = process.env.NODE_ENV === 'production';
 

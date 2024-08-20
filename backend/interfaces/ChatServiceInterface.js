@@ -1,7 +1,7 @@
 /**
- * @interface CommunicationInterface
+ * @interface ChatServiceInterface
  */
-class CommunicationInterface {
+class ChatServiceInterface {
     /**
      * Handle user join event.
      * @throws {Error} If not implemented.
@@ -37,4 +37,4 @@ class CommunicationInterface {
     }
 }
 
-module.exports = CommunicationInterface;
+module.exports = ChatServiceInterface;

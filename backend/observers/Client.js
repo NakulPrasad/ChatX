@@ -32,6 +32,13 @@ class Client extends ObserverInterface {
          * @private
          */
         this.username = null;
+
+        /**
+         * Client's sessionId. - when using HTTP
+         * @type {?string}
+         * @private
+         */
+        this.sessionID = null;
     }
 
     /**
@@ -44,6 +51,14 @@ class Client extends ObserverInterface {
         this.username = username;
     }
 
+    /**
+     * Sends an update to the client. - HTTP
+     * @param {string} event - The event name.
+     * @param {Object} message - The data to send.
+     */
+    updateHTTP(event, message) {
+        // send update to their session id
+    }
     /**
      * Sends an update to the client.
      * @param {string} event - The event name.

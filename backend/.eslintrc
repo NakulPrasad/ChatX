@@ -1,13 +1,21 @@
 {
   "plugins": ["jsdoc"],
+  "extends": ["eslint:recommended", "plugin:jsdoc/recommended"],
   "rules": {
-    "jsdoc/check-param-names": 2,
-    "jsdoc/check-tag-names": 2,
-    "jsdoc/check-types": 2,
-    "jsdoc/require-param": 2,
-    "jsdoc/require-param-description": 2,
-    "jsdoc/require-param-type": 2,
-    "jsdoc/require-returns-description": 2,
-    "jsdoc/require-returns-type": 2
+    "jsdoc/check-alignment": "error", // Example rule: enforce JSDoc comments alignment
+    "jsdoc/check-param-names": "error", // Checks that parameter names match those in the function declaration
+    "jsdoc/check-tag-names": "error", // Ensure that JSDoc tags exist
+    "jsdoc/check-types": "error", // Enforces using consistent types
+    "jsdoc/require-jsdoc": [
+      "error",
+      {
+        // Require JSDoc comments for certain nodes
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": true,
+          "ClassDeclaration": true
+        }
+      }
+    ]
   }
 }

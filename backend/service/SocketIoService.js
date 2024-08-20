@@ -1,4 +1,4 @@
-const CommunicationInterface = require("../interfaces/communicationInterface");
+const chatServiceInterface = require("../interfaces/ChatServiceInterface");
 const ChatRoom = require('../observers/ChatRoom.js');
 const Client = require('../observers/Client.js');
 const { getMessages, saveMessage } = require('../utils/messageStore.js');
@@ -15,13 +15,13 @@ const allowedOrigins = process.env.ORIGINS?.split('|') || [
 ];
 
 /**
- * Adapter for Socket.IO that implements the CommunicationInterface.
+ * Service for Socket.IO that implements the chatServiceInterface.
  * Handles socket events and communication within the chat application.
- * @extends {CommunicationInterface}
+ * @extends {chatServiceInterface}
  */
-class SocketIoAdapter extends CommunicationInterface {
+class SocketIoService extends chatServiceInterface {
     /**
-     * Creates an instance of SocketIoAdapter.
+     * Creates an instance of SocketIoService.
      * @param {http.Server} httpServer - The HTTP server to attach Socket.IO to.
      */
     constructor(httpServer) {
@@ -164,4 +164,4 @@ class SocketIoAdapter extends CommunicationInterface {
     }
 }
 
-module.exports = SocketIoAdapter;
+module.exports = SocketIoService;
