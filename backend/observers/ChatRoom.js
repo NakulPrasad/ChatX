@@ -1,159 +1,164 @@
-const ObservableInterface = require('../interfaces/ObservableInterface');
+const ObservableInterface = require('../interfaces/ObservableInterface')
 
 /**
  * Chat room that users can join, leave, and send messages in.
  * @extends ObservableInterface
  */
+
+/**
+ * @typedef {object} Client
+ * @property {string} roomId - roomid of user
+ */
 class ChatRoom extends ObservableInterface {
+  /**
+   * Initializes a new chat room.
+   */
+  constructor() {
+    super()
     /**
-     * Initializes a new chat room.
+     * List of all users.
+     * @type {Array<Client>}
      */
-    constructor() {
-        super();
-        /**
-         * List of all users.
-         * @type {Array<Client>}
-         */
-        this.allUsers = [];
-
-        /**
-         * Users grouped by room.
-         * @type {Object<string, Array<Client>>}
-         */
-        this.roomUsers = {};
-    }
+    this.allUsers = []
 
     /**
-     * Adds a user to the chat room.
-     * @param {Client} user
+     * Users grouped by room.
+     * @type {object}
      */
-    subscribe(user) {
-        if (!this.allUsers.find(u => u.username === user.username && u.roomId === user.roomId)) {
-            this.allUsers.push(user);
-        }
+    this.roomUsers = {}
+  }
+
+  /**
+   * Adds a user to the chat room.
+   * @param {Client} user - client
+   */
+  subscribe(user) {
+    if (!this.allUsers.find(u => u.username === user.username && u.roomId === user.roomId)) {
+      this.allUsers.push(user)
+    }
+  }
+
+  /**
+   * Adds a user to a specific room.
+   * @param {Client} user - client
+   */
+  addUser(user) {
+    if (!this.roomUsers[user.roomId]) {
+      this.roomUsers[user.roomId] = []
+    }
+    if (!this.roomUsers[user.roomId].find(u => u.username === user.username && u.roomId === user.roomId)) {
+      this.roomUsers[user.roomId].push(user)
+    }
+  }
+
+  /**
+   * Removes a user based on socket ID.
+   * @param {string} socketId - socket id associated with user
+   * @returns {?Client} Removed user or null.
+   */
+  unsubscribe(socketId) {
+    const user = this.allUsers.find(user => user.socketId === socketId)
+    if (!user) return null
+
+    this.allUsers = this.allUsers.filter(user => user.socketId !== socketId)
+    this.roomUsers[user.roomId] = this.roomUsers[user.roomId].filter(user => user.socketId !== socketId)
+
+    if (this.roomUsers[user.roomId].length === 0) {
+      delete this.roomUsers[user.roomId]
     }
 
-    /**
-     * Adds a user to a specific room.
-     * @param {Client} user 
-     */
-    addUser(user) {
-        if (!this.roomUsers[user.roomId]) {
-            this.roomUsers[user.roomId] = [];
-        }
-        if (!this.roomUsers[user.roomId].find(u => u.username === user.username && u.roomId === user.roomId)) {
-            this.roomUsers[user.roomId].push(user);
-        }
-    }
+    return user
+  }
 
-    /**
-     * Removes a user based on socket ID.
-     * @param {string} socketId 
-     * @returns {?Client} Removed user or null.
-     */
-    unsubscribe(socketId) {
-        const user = this.allUsers.find(user => user.socketId === socketId);
-        if (!user) return null;
+  /**
+   * Notifies all users in a room.
+   * @param {string} event
+   * @param {SocketIO.Server} io
+   * @param {string} roomId
+   * @param {object} message
+   * @param {string} senderSocketId
+   */
+  notify(event, io, roomId, message, senderSocketId) {
+    const usersInRoom = this.roomUsers[roomId] || []
+    usersInRoom.forEach(user => {
+      if (senderSocketId !== user.socketId) {
+        user.update(event, message, io)
+      }
+    })
+  }
 
-        this.allUsers = this.allUsers.filter(user => user.socketId !== socketId);
-        this.roomUsers[user.roomId] = this.roomUsers[user.roomId].filter(user => user.socketId !== socketId);
+  /**
+   * Notifies all users in a room. - HTTP
+   * @param {string} event
+   * @param {string} roomId
+   * @param {object} message
+   * @param senderSessionId
+   */
+  notifyHTTP(event, roomId, message, senderSessionId) {
+    const usersInRoom = this.roomUsers[roomId] || []
+    usersInRoom.forEach(user => {
+      if (senderSessionId !== user.sessionId) {
+        user.update(event, message)
+      }
+    })
+  }
 
-        if (this.roomUsers[user.roomId].length === 0) {
-            delete this.roomUsers[user.roomId];
-        }
+  /**
+   * Gets users in a room.
+   * @param {string} roomId
+   * @returns {Array<Client>}
+   */
+  getRoomUsers(roomId) {
+    return this.roomUsers[roomId] || []
+  }
 
-        return user;
-    }
+  /**
+   * Gets all users.
+   * @returns {Array<Client>}
+   */
+  getAllUsers() {
+    return this.allUsers
+  }
 
-    /**
-     * Notifies all users in a room.
-     * @param {string} event 
-     * @param {SocketIO.Server} io 
-     * @param {string} roomId 
-     * @param {Object} message 
-     * @param {string} senderSocketId 
-     */
-    notify(event, io, roomId, message, senderSocketId) {
-        const usersInRoom = this.roomUsers[roomId] || [];
-        usersInRoom.forEach(user => {
-            if (senderSocketId !== user.socketId) {
-                user.update(event, message, io);
-            }
-        });
-    }
+  /**
+   * Sends a message to all users in a room.
+   * @param {string} roomId
+   * @param {object} message
+   * @param {SocketIO.Server} io
+   * @param {string} senderSocketId
+   */
+  sendMessages(roomId, message, io, senderSocketId) {
+    this.notify('receiveMessage', io, roomId, message, senderSocketId)
+  }
 
-    /**
-     * Notifies all users in a room. - HTTP
-     * @param {string} event 
-     * @param {string} roomId 
-     * @param {Object} message 
-     */
-    notifyHTTP(event, roomId, message, senderSessionId) {
-        const usersInRoom = this.roomUsers[roomId] || [];
-        usersInRoom.forEach(user => {
-            if (senderSessionId !== user.sessionId) {
-                user.update(event, message);
-            }
-        });
-    }
+  /**
+   * Notifies about a new user joining.
+   * @param {string} roomId
+   * @param {object} message
+   * @param {SocketIO.Server} io
+   */
+  joinRoomMessage(roomId, message, io) {
+    this.notify('joinRoomMsg', io, roomId, message)
+  }
 
-    /**
-     * Gets users in a room.
-     * @param {string} roomId 
-     * @returns {Array<Client>}
-     */
-    getRoomUsers(roomId) {
-        return this.roomUsers[roomId] || [];
-    }
+  /**
+   * Notifies about a new user joining. - HTTP METHOD
+   * @param {string} roomId
+   * @param {object} message
+   */
+  joinRoomMessageHttp(roomId, message) {
+    this.notify('joinRoomMsg', roomId, message)
+  }
 
-    /**
-     * Gets all users.
-     * @returns {Array<Client>}
-     */
-    getAllUsers() {
-        return this.allUsers;
-    }
-
-    /**
-     * Sends a message to all users in a room.
-     * @param {string} roomId 
-     * @param {Object} message 
-     * @param {SocketIO.Server} io 
-     * @param {string} senderSocketId 
-     */
-    sendMessages(roomId, message, io, senderSocketId) {
-        this.notify('receiveMessage', io, roomId, message, senderSocketId);
-    }
-
-    /**
-     * Notifies about a new user joining.
-     * @param {string} roomId 
-     * @param {Object} message 
-     * @param {SocketIO.Server} io 
-     */
-    joinRoomMessage(roomId, message, io) {
-        this.notify('joinRoomMsg', io, roomId, message);
-    }
-
-    /**
-     * Notifies about a new user joining. - HTTP METHOD
-     * @param {string} roomId 
-     * @param {Object} message 
-     * @param {SocketIO.Server} io 
-     */
-    joinRoomMessageHttp(roomId, message) {
-        this.notify('joinRoomMsg', roomId, message);
-    }
-
-    /**
-     * Notifies about a user disconnecting.
-     * @param {string} roomId 
-     * @param {Object} message 
-     * @param {SocketIO.Server} io 
-     */
-    userDisconnect(roomId, message, io) {
-        this.notify('userDisconnect', io, roomId, message);
-    }
+  /**
+   * Notifies about a user disconnecting.
+   * @param {string} roomId - roomId
+   * @param {object} message - message body
+   * @param {SocketIO.Server} io - server io instance
+   */
+  userDisconnect(roomId, message, io) {
+    this.notify('userDisconnect', io, roomId, message)
+  }
 }
 
-module.exports = ChatRoom;
+module.exports = ChatRoom

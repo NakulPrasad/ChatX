@@ -1,8 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}'
   ],
   theme: {
     extend: {
@@ -26,11 +26,10 @@ export default {
         buttonPrimaryHover2: '#003366', // Even Darker Blue (Primary button hover)
         buttonSecondary: '#6c757d', // Gray (Secondary buttons)
         buttonSecondaryHover: '#5a6268', // Darker Gray (Secondary button hover)
-        borderHover: '#ced4da', // Slightly darker gray for borders on hover
-      },
-    },
+        borderHover: '#ced4da' // Slightly darker gray for borders on hover
+      }
+    }
 
   },
-  plugins: [],
+  plugins: []
 }
-
