@@ -17,13 +17,7 @@ export default [
     rules: {
       'jsdoc/require-description': 'warn',
       "jsdoc/check-tag-names": ["error", { "definedTags": ["consumes", "produces", "route", "Socket"] }],
-      "no-unused-vars": ["warn", {
-        "vars": "all",
-        "args": "after-used",
-        "caughtErrors": "all",
-        "ignoreRestSiblings": false,
-        "reportUsedIgnorePattern": false
-      }]
+      "no-unused-vars": "off"
     },
     settings: {
       jsdoc: {

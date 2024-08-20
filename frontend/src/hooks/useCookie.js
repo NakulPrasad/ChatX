@@ -10,7 +10,7 @@ export const useCookie = () => {
   const getItem = (name) => {
     try {
       const value = Cookies.get(name)
-      return JSON.parse(value) || null
+      return (value) ? JSON.parse(value) : null
     } catch (error) {
       console.error(error)
     }
