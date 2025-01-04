@@ -13,7 +13,7 @@ import { ROUTES } from "./utils/routes";
 import "@mantine/core/styles.css";
 
 import { MantineProvider } from "@mantine/core";
-import { theme } from "../theme/theme";
+import { theme } from "../theme/theme"
 
 const router = createBrowserRouter([
   {
