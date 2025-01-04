@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import useChatRoomManager from "../hooks/useChatRoomManager.js";
+import useSocket from "../hooks/useSocket.js";
 import sideImage from "/join.gif";
 import { toast } from "react-toastify";
 import { useCookie } from "../hooks/useCookie.js";
 
 const JoinRoom = () => {
   const navigate = useNavigate();
-  const { socket } = useChatRoomManager();
+  const { socket } = useSocket();
   const { setItem } = useCookie();
   const [userAndRoom, setUserAndRoom] = useState({ username: "", roomId: "" });
 

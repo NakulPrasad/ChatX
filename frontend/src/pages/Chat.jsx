@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Message from "../components/Message.jsx";
-import useChatRoomManger from "../hooks/useChatRoomManager.js";
+import useChatRoomManger from "../hooks/useSocket.js";
 import { UserContext } from "../context/UserContext.jsx";
 import DateObject from "react-date-object";
 

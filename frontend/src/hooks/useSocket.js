@@ -4,7 +4,7 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { useCookie } from './useCookie'
 import { UserContext } from '../context/UserContext'
 
-const useChatRoomManager = () => {
+const useSocket = () => {
   const { getItem } = useCookie()
   const LoggedInUser = getItem('user')
   const LoggedInUserRef = useRef(LoggedInUser)
@@ -97,4 +97,4 @@ const useChatRoomManager = () => {
   return { socket, currentUsers, previousMessages, sendMessage }
 }
 
-export default useChatRoomManager
+export default useSocket
