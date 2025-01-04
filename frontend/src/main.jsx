@@ -13,6 +13,7 @@ import { ROUTES } from "./utils/routes";
 import "@mantine/core/styles.css";
 
 import { MantineProvider } from "@mantine/core";
+import { theme } from "../theme/theme";
 
 const router = createBrowserRouter([
   {
@@ -39,7 +40,7 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <MantineProvider>
+    <MantineProvider theme={theme}>
       <RouterProvider router={router} />
       <ToastContainer />
     </MantineProvider>

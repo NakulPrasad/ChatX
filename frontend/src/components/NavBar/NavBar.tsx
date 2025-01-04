@@ -1,5 +1,5 @@
 // import { IconMessage } from '@tabler/icons-react';
-import { Group, Stack, ThemeIcon } from '@mantine/core';
+import { Avatar, Flex, Group, Stack, ThemeIcon, useMantineTheme } from '@mantine/core';
 import React from 'react';
 import IconMessage from '../../assets/icons/message.svg?react'
 import IconStatus from '../../assets/icons/status.svg?react'
@@ -12,9 +12,10 @@ export interface IHeaderProps {
 }
 
 export default function NavBar (props: IHeaderProps) {
+  const theme = useMantineTheme();
   return (
-    <Stack>
-    <Stack>
+    <Stack align='center' justify='space-between' p={theme.spacing.xs} >
+    <Stack align='center'>
       <ThemeIcon>
 
       <IconMessage/>
@@ -33,11 +34,13 @@ export default function NavBar (props: IHeaderProps) {
       </ThemeIcon>
       {/* <ThemeIcon /> */}
     </Stack>
-    <Stack>
+    <Stack align='center'>
+    <Avatar />
       <ThemeIcon>
 
       <IconSetting/>
       </ThemeIcon>
+
     </Stack>
     </Stack>
   );

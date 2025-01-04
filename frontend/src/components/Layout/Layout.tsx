@@ -1,6 +1,5 @@
 import { AppShell, Burger, Group, Skeleton, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import React from 'react';
 import NavBar from '../NavBar/NavBar'
 
 export default function Layout() {

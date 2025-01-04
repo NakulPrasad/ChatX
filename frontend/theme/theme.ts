@@ -7,6 +7,7 @@ import {
     MantineColorsTuple,
     MantineTheme,
     rem,
+    ThemeIcon,
   } from "@mantine/core";
   import "./fonts/ProximaNova.css";
   
@@ -118,6 +119,13 @@ import {
     cursorType: "pointer",
     defaultRadius: "md",
     components: {
+      ThemeIcon: {
+        styles:(theme:MantineTheme)=>({
+          root:{
+            p : theme.spacing.xs,
+          }
+        })
+      },
       Container: {
         styles: (theme: MantineTheme) => ({
           root: {
